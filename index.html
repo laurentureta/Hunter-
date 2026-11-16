@@ -71,7 +71,7 @@ nav.tabs button.on{color:var(--tx)}
 /* carte */
 .map{position:absolute;inset:0;background:#0A0E13;z-index:0}
 .leaflet-container{background:#0A0E13;font-family:inherit}
-.tl-dark{filter:invert(1) hue-rotate(180deg) brightness(.92) contrast(.9) saturate(.3)}
+.tl-dark{filter:grayscale(1) invert(1) brightness(.88) contrast(1.05)}
 .leaflet-control-attribution{background:rgba(6,8,11,.6)!important;color:#93A0B0!important;font-size:9px}
 .leaflet-control-attribution a{color:#93A0B0!important}
 .mk{position:relative;width:30px;height:30px;display:flex;align-items:center;justify-content:center}
@@ -266,7 +266,7 @@ const TILES = {
 /* ---------- utilitaires ---------- */
 function put(el, html){ if (el._h === html && el.innerHTML) return; el._h = html; el.innerHTML = html; }
 function show(id){ $$('.screen').forEach(s => s.classList.toggle('on', s.id === id)); }
-function toast(msg, kind){ const t = document.createElement('div'); t.className = 'toast ' + (kind || ''); t.textContent = msg; $('#toasts').appendChild(t); setTimeout(() => t.remove(), 4200); }
+function toast(msg, kind){ const box = $('#toasts'), old = Array.from(box.children); if (old.some(x => x.textContent === msg)) return; while (box.children.length >= 2) box.firstChild.remove(); const t = document.createElement('div'); t.className = 'toast ' + (kind || ''); t.textContent = msg; $('#toasts').appendChild(t); setTimeout(() => t.remove(), 4200); }
 function fmt(s){ s = Math.max(0, Math.round(s)); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); }
 function fmtDur(s){ if (s == null) return '—'; s = Math.round(s); const m = Math.floor(s / 60), r = s % 60; return m ? m + ' min ' + String(r).padStart(2, '0') + ' s' : r + ' s'; }
 function ago(s){ if (s == null) return ''; return s < 60 ? 'il y a ' + s + ' s' : 'il y a ' + Math.floor(s / 60) + ' min' + (s % 60 ? ' ' + (s % 60) + ' s' : ''); }
@@ -302,6 +302,12 @@ function msgBox(html){ const o = $('#ov-msg'); o.innerHTML = html; o.classList.a
 function msgClose(){ $('#ov-msg').classList.remove('on'); $('#ov-msg').innerHTML = ''; }
 function confirmBox(title, text, yes, cb, danger){ msgBox('<div style="margin-top:14vh" class="col"><h1 class="hd" style="font-size:30px;line-height:1.1">' + esc(title) + '</h1><p class="tx2" style="font-size:16px;line-height:1.45">' + esc(text) + '</p></div><div class="col" style="margin-top:auto;align-self:stretch"><button class="btn ' + (danger ? 'r' : 'w') + '" id="cf-y">' + esc(yes) + '</button><button class="btn" id="cf-n">Annuler</button></div>');
   $('#cf-y').onclick = () => { msgClose(); cb(); }; $('#cf-n').onclick = msgClose; }
+
+function gpsHelp(){ const li = (n, t) => '<div class="row" style="align-items:flex-start;text-align:left"><b class="hd blue" style="width:18px">' + n + '</b><span style="line-height:1.45">' + t + '</span></div>';
+  msgBox('<div class="col" style="text-align:left;align-self:stretch;gap:10px"><span class="lbl amb">Localisation refusée</span><h1 class="hd" style="font-size:28px;line-height:1.12">Autorise HUNT à voir ta position</h1><p class="tx2" style="line-height:1.45">Ton téléphone bloque la localisation pour les sites web. Trois réglages à faire une seule fois.</p></div>' +
+    '<div class="card col" style="gap:14px;align-self:stretch">' + li(1, 'Ouvre <b>Réglages</b> de l\'iPhone, puis <b>Confidentialité et sécurité</b>, puis <b>Service de localisation</b> : il doit être activé.') + li(2, 'Dans cette même liste, touche <b>Sites Web Safari</b>, choisis <b>Lorsque l\'app est active</b> et active <b>Position exacte</b>.') + li(3, 'Reviens ici, recharge la page, puis touche <b>Autoriser</b> quand Safari le demande.') + '</div>' +
+    '<p class="mu" style="font-size:13px;text-align:left;align-self:stretch;line-height:1.45">Sur Android : touche le cadenas à côté de l\'adresse, puis Autorisations, Position, Autoriser.</p><div class="col" style="margin-top:auto;align-self:stretch"><button class="btn w" id="gh-ok">J\'ai compris</button></div>');
+  $('#gh-ok').onclick = msgClose; }
 
 /* ---------- connexion ---------- */
 let authMode = 'in';
@@ -399,7 +405,7 @@ function zRedraw(){ drawStatic(S.zmap, S.zlay, S.zone, S.areas, null); $$('#z-mo
 $('#z-mode').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; S.zMode = b.dataset.t; const r = S.zMode === 'zone' ? (S.zone ? S.zone.r : 300) : 40; $('#z-r').value = r; $('#z-rv').textContent = r + ' m'; zRedraw(); });
 $('#z-r').oninput = e => { const r = +e.target.value; $('#z-rv').textContent = r + ' m'; if (S.zMode === 'zone' && S.zone) { S.zone.r = r; zRedraw(); clearTimeout(S.zFitT); S.zFitT = setTimeout(zFit, 250); } else if (S.zMode !== 'zone' && S.areas.length && S.areas[S.areas.length - 1].type === S.zMode) { S.areas[S.areas.length - 1].r = r; zRedraw(); } };
 $('#z-undo').onclick = () => { const h = S.zHist.pop(); if (!h) return; if (h.area) S.areas.pop(); else S.zone = h.zone; zRedraw(); };
-$('#z-me').onclick = () => { if (!navigator.geolocation) return toast('GPS indisponible sur cet appareil', 'err'); toast('Recherche de ta position…'); navigator.geolocation.getCurrentPosition(p => S.zmap.setView([p.coords.latitude, p.coords.longitude], 16), () => toast('Position refusée ou indisponible', 'err'), { enableHighAccuracy:true, timeout:12000 }); };
+$('#z-me').onclick = () => { if (!navigator.geolocation) return toast('GPS indisponible sur cet appareil', 'err'); toast('Recherche de ta position…'); navigator.geolocation.getCurrentPosition(p => S.zmap.setView([p.coords.latitude, p.coords.longitude], 16), e => { if (e.code === 1) gpsHelp(); else toast(e.code === 3 ? 'Position introuvable pour l\'instant : réessaie, de préférence dehors' : 'Position indisponible : vérifie que la localisation est activée', 'err'); }, { enableHighAccuracy:true, timeout:15000, maximumAge:10000 }); };
 $('#z-tiles').onclick = () => nextTiles(S.zmap);
 $('#z-back').onclick = () => show('s-create');
 $('#z-create').onclick = async () => { const go = async () => { const d = Object.assign({}, S.draft, { zone:S.zone, areas:S.areas }); try { const r = await rpc('create_game', { p:d }); enterGame(r.id); } catch (e) { toast(e.message, 'err'); } };
@@ -451,7 +457,7 @@ function handleEvent(ev){ const d = ev.data || {}, me = S.user.id, st = S.st, te
 /* ---------- GPS : uniquement pendant une partie en cours ---------- */
 function startGPS(){ if (S.track) return; S.track = true; wakeOn(); if (!navigator.geolocation) { S.gpsErr = 'GPS indisponible sur cet appareil'; return; }
   S.watchId = navigator.geolocation.watchPosition(p => { const c = p.coords; S.gpsErr = null; S.pos = { lat:c.latitude, lng:c.longitude, acc:isFinite(c.accuracy) ? c.accuracy : null, heading:(c.heading == null || isNaN(c.heading)) ? null : c.heading, speed:(c.speed == null || isNaN(c.speed)) ? null : c.speed, t:Date.now() }; drawMe(); },
-    err => { S.gpsErr = err.code === 1 ? 'Autorise la localisation pour jouer' : 'GPS indisponible'; if (S.st) renderGame(); }, { enableHighAccuracy:true, maximumAge:0, timeout:20000 }); }
+    err => { S.gpsErr = err.code === 1 ? 'Localisation refusée : autorise-la dans les réglages' : 'GPS indisponible'; if (err.code === 1 && S.gpsHelpFor !== S.gameId) { S.gpsHelpFor = S.gameId; gpsHelp(); } if (S.st) renderGame(); }, { enableHighAccuracy:true, maximumAge:0, timeout:20000 }); }
 function stopGPS(){ if (S.watchId != null && navigator.geolocation) navigator.geolocation.clearWatch(S.watchId); S.watchId = null; S.track = false; S.pos = null; wakeOff(); }
 
 /* ---------- salon ---------- */
