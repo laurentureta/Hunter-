@@ -71,6 +71,7 @@ nav.tabs button.on{color:var(--tx)}
 /* carte */
 .map{position:absolute;inset:0;background:#0A0E13;z-index:0}
 .leaflet-container{background:#0A0E13;font-family:inherit}
+.tl-dark{filter:invert(1) hue-rotate(180deg) brightness(.92) contrast(.9) saturate(.3)}
 .leaflet-control-attribution{background:rgba(6,8,11,.6)!important;color:#93A0B0!important;font-size:9px}
 .leaflet-control-attribution a{color:#93A0B0!important}
 .mk{position:relative;width:30px;height:30px;display:flex;align-items:center;justify-content:center}
@@ -192,7 +193,7 @@ video#cam{width:100%;border-radius:14px;background:#000;max-height:46dvh;object-
 <div class="map" id="zmap"></div>
 <div class="hud">
   <div class="top"><button class="ib" id="z-back" aria-label="Retour">‹</button><div class="clk" style="padding:0 14px"><h1 class="hd" style="font-size:17px">Zone de jeu</h1><span class="lbl">2 / 2</span></div><button class="ib" id="z-tiles" aria-label="Changer de fond de carte">◐</button></div>
-  <div class="ban" id="z-hint">Touche la carte pour placer le centre de la zone.</div>
+  <div class="ban" id="z-hint">Touche « Ma position » ou rapproche la carte sur ton terrain, puis touche le centre de la zone.</div>
 </div>
 <div class="bot">
   <div class="seg" id="z-mode"><button class="on" data-t="zone">Périmètre</button><button data-t="forbidden">Interdite</button><button data-t="danger">Danger</button><button data-t="poi">Repère</button><button data-t="bonus">Bonus</button></div>
@@ -258,7 +259,7 @@ const POW = {
 const POW_DEF = { radar:[30,300,3], proximity:[60,240,3], ring:[10,180,3], sector:[60,240,3], fastgps:[120,600,2], camo:[120,600,2], freeze:[20,900,1], detect:[60,240,3], shield:[45,600,1], decoy:[90,900,1] };
 const HUNTER_P = ['radar','proximity','ring','sector','fastgps'], DIRS = ['nord','nord-est','est','sud-est','sud','sud-ouest','ouest','nord-ouest'];
 const TILES = {
-  dark:{ url:'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', opt:{ subdomains:'abcd', maxZoom:20, attribution:'© OpenStreetMap © CARTO' } },
+  dark:{ url:'https://tile.openstreetmap.org/{z}/{x}/{y}.png', opt:{ maxZoom:19, className:'tl-dark', attribution:'© OpenStreetMap' } },
   std:{ url:'https://tile.openstreetmap.org/{z}/{x}/{y}.png', opt:{ maxZoom:19, attribution:'© OpenStreetMap' } },
   sat:{ url:'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', opt:{ maxZoom:19, attribution:'Images © Esri' } } };
 
@@ -387,14 +388,16 @@ function drawStatic(map, group, zone, areas, search){ group.clearLayers();
 /* ---------- éditeur de zone ---------- */
 function openZone(){ show('s-zone'); S.zone = null; S.areas = []; S.zHist = []; S.zMode = 'zone';
   if (!S.zmap) { S.zmap = mkMap('zmap'); S.zlay = L.layerGroup().addTo(S.zmap);
-    S.zmap.on('click', ev => { const r = +$('#z-r').value, p = { lat:ev.latlng.lat, lng:ev.latlng.lng, r:r };
-      if (S.zMode === 'zone') { S.zHist.push({ zone:S.zone }); S.zone = p; } else { if (S.areas.length >= 40) return toast('40 zones au maximum', 'err'); S.areas.push(Object.assign({ type:S.zMode, name:AREA_NAME[S.zMode] }, p)); S.zHist.push({ area:true }); }
+    S.zmap.on('click', ev => { if (S.zmap.getZoom() < 13) { S.zmap.setView(ev.latlng, 15); return toast('Carte rapprochée : touche à nouveau pour placer'); }
+      const r = +$('#z-r').value, p = { lat:ev.latlng.lat, lng:ev.latlng.lng, r:r };
+      if (S.zMode === 'zone') { S.zHist.push({ zone:S.zone }); S.zone = p; zFit(); } else { if (S.areas.length >= 40) return toast('40 zones au maximum', 'err'); S.areas.push(Object.assign({ type:S.zMode, name:AREA_NAME[S.zMode] }, p)); S.zHist.push({ area:true }); }
       zRedraw(); }); }
   setTimeout(() => S.zmap.invalidateSize(), 60); zRedraw(); }
+function zFit(){ if (S.zone) S.zmap.fitBounds(L.latLng(S.zone.lat, S.zone.lng).toBounds(S.zone.r * 2.6)); }
 function zRedraw(){ drawStatic(S.zmap, S.zlay, S.zone, S.areas, null); $$('#z-mode button').forEach(b => b.classList.toggle('on', b.dataset.t === S.zMode));
-  $('#z-hint').textContent = S.zMode === 'zone' ? (S.zone ? 'Périmètre placé. Règle le rayon ou touche ailleurs pour le déplacer.' : 'Touche la carte pour placer le centre de la zone.') : 'Touche la carte pour ajouter : ' + AREA_NAME[S.zMode].toLowerCase() + '.'; }
+  $('#z-hint').textContent = S.zMode === 'zone' ? (S.zone ? 'Périmètre placé. Règle le rayon ou touche ailleurs pour le déplacer.' : 'Touche « Ma position » ou rapproche la carte sur ton terrain, puis touche le centre de la zone.') : 'Touche la carte pour ajouter : ' + AREA_NAME[S.zMode].toLowerCase() + '.'; }
 $('#z-mode').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; S.zMode = b.dataset.t; const r = S.zMode === 'zone' ? (S.zone ? S.zone.r : 300) : 40; $('#z-r').value = r; $('#z-rv').textContent = r + ' m'; zRedraw(); });
-$('#z-r').oninput = e => { const r = +e.target.value; $('#z-rv').textContent = r + ' m'; if (S.zMode === 'zone' && S.zone) { S.zone.r = r; zRedraw(); } else if (S.zMode !== 'zone' && S.areas.length && S.areas[S.areas.length - 1].type === S.zMode) { S.areas[S.areas.length - 1].r = r; zRedraw(); } };
+$('#z-r').oninput = e => { const r = +e.target.value; $('#z-rv').textContent = r + ' m'; if (S.zMode === 'zone' && S.zone) { S.zone.r = r; zRedraw(); clearTimeout(S.zFitT); S.zFitT = setTimeout(zFit, 250); } else if (S.zMode !== 'zone' && S.areas.length && S.areas[S.areas.length - 1].type === S.zMode) { S.areas[S.areas.length - 1].r = r; zRedraw(); } };
 $('#z-undo').onclick = () => { const h = S.zHist.pop(); if (!h) return; if (h.area) S.areas.pop(); else S.zone = h.zone; zRedraw(); };
 $('#z-me').onclick = () => { if (!navigator.geolocation) return toast('GPS indisponible sur cet appareil', 'err'); toast('Recherche de ta position…'); navigator.geolocation.getCurrentPosition(p => S.zmap.setView([p.coords.latitude, p.coords.longitude], 16), () => toast('Position refusée ou indisponible', 'err'), { enableHighAccuracy:true, timeout:12000 }); };
 $('#z-tiles').onclick = () => nextTiles(S.zmap);
