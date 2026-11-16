@@ -1,0 +1,626 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="HUNT">
+<meta name="theme-color" content="#06080B">
+<title>HUNT</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+:root{--bg:#06080B;--s1:#0E1218;--s2:#151B23;--bd:#232B36;--bd2:#3A4554;--tx:#F2F5F8;--tx2:#C5CDD8;--mu:#93A0B0;--red:#FF4D57;--redb:#D91E2E;--redl:#FF8088;--blue:#3BA4FF;--bluel:#7CC2FF;--amb:#FFB020;--grn:#5FD39A;--hd:'Space Grotesk',system-ui,sans-serif}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--tx);font-family:'Inter',system-ui,sans-serif;font-size:15px;overscroll-behavior:none;touch-action:manipulation}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+h1,h2,h3,p{margin:0}
+.screen{display:none;flex-direction:column;height:100vh;height:100dvh;padding-top:env(safe-area-inset-top);position:relative;overflow:hidden}
+.screen.on{display:flex}
+.pad{padding:18px 20px calc(18px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:16px;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.hd{font-family:var(--hd);font-weight:700}
+.lbl{font-size:12px;font-weight:600;letter-spacing:.14em;color:var(--mu);text-transform:uppercase}
+.mu{color:var(--mu)}.tx2{color:var(--tx2)}.red{color:var(--red)}.blue{color:var(--blue)}.amb{color:var(--amb)}.grn{color:var(--grn)}
+.row{display:flex;align-items:center;gap:10px}.col{display:flex;flex-direction:column;gap:8px}.grow{flex:1;min-width:0}.sp{justify-content:space-between}
+.card{background:var(--s1);border:1px solid var(--bd);border-radius:16px;padding:14px 16px}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;min-height:52px;padding:0 18px;border-radius:14px;border:1px solid var(--bd2);background:transparent;font-family:var(--hd);font-weight:700;font-size:14px;letter-spacing:.1em;text-transform:uppercase;text-decoration:none;color:var(--tx)}
+.btn.w{background:var(--tx);color:var(--bg);border-color:var(--tx)}
+.btn.r{background:var(--redb);color:#fff;border-color:var(--redb)}
+.btn.b{background:var(--blue);color:#03101C;border-color:var(--blue)}
+.btn.ro{border-color:var(--red);color:var(--redl)}
+.btn.sm{min-height:44px;padding:0 14px;font-size:12px;border-radius:12px}
+.btn[disabled]{background:var(--s2);border-color:#2A3340;color:var(--mu)}
+.lnk{background:none;border:0;min-height:44px;padding:0 6px;color:var(--tx2);font-weight:600;text-decoration:underline}
+.ib{width:44px;height:44px;flex:none;display:flex;align-items:center;justify-content:center;border-radius:12px;border:1px solid var(--bd);background:var(--s1)}
+.in{width:100%;height:52px;padding:0 14px;border-radius:12px;border:1px solid var(--bd);background:var(--s1);font-size:16px;outline:none}
+.in:focus{border-color:var(--blue)}
+textarea.in{height:auto;padding:12px 14px;min-height:76px;resize:none}
+select.in{appearance:none;-webkit-appearance:none}
+.fld{display:flex;flex-direction:column;gap:6px}
+.set{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:56px;border-bottom:1px solid #1B222C}
+.set:last-child{border-bottom:0}
+.set .in{width:132px;height:44px;flex:none;text-align:center}
+.set input[type=number].in{width:84px}
+.sw{position:relative;width:52px;height:44px;flex:none;border:0;background:none;padding:0}
+.sw i{position:absolute;left:0;top:7px;width:52px;height:30px;border-radius:15px;background:#2A3340;transition:background .15s}
+.sw i:after{content:'';position:absolute;left:3px;top:3px;width:24px;height:24px;border-radius:50%;background:var(--mu);transition:transform .15s,background .15s}
+.sw[aria-pressed=true] i{background:var(--redb)}.sw[aria-pressed=true] i:after{transform:translateX(22px);background:#fff}
+.sw.bl[aria-pressed=true] i{background:#1677E5}
+.dm{display:inline-block;width:10px;height:10px;flex:none;background:var(--red);transform:rotate(45deg)}
+.ci{display:inline-block;width:10px;height:10px;flex:none;border-radius:50%;background:var(--blue)}
+.sq{display:inline-block;width:10px;height:10px;flex:none;border:1.5px solid var(--mu)}
+.av{width:44px;height:44px;flex:none;border-radius:50%;background:var(--s2);border:1.5px solid var(--bd2);display:flex;align-items:center;justify-content:center;font-family:var(--hd);font-weight:700;font-size:17px;object-fit:cover;overflow:hidden}
+.av.lg{width:68px;height:68px;font-size:26px}
+.bar{height:6px;border-radius:3px;background:#1B222C;overflow:hidden}.bar i{display:block;height:6px;background:var(--tx)}
+.li{display:flex;align-items:center;gap:10px;min-height:52px;border-bottom:1px solid #1B222C}.li:last-child{border-bottom:0}
+.tag{padding:3px 8px;border-radius:6px;border:1px solid var(--amb);font-size:11px;font-weight:700;letter-spacing:.06em;color:var(--amb);white-space:nowrap}
+.seg{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:4px;padding:4px;border-radius:12px;background:var(--s1);border:1px solid var(--bd)}
+.seg button{height:44px;border:0;border-radius:9px;background:transparent;color:var(--tx2);font-weight:600;font-size:13px}
+.seg button.on{background:var(--tx);color:var(--bg);font-weight:700}
+nav.tabs{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid #1B222C;background:#0A0D12;padding-bottom:env(safe-area-inset-bottom)}
+nav.tabs button{height:64px;border:0;background:none;color:var(--mu);font-size:12px;font-weight:600}
+nav.tabs button.on{color:var(--tx)}
+#toasts{position:fixed;left:12px;right:12px;top:calc(env(safe-area-inset-top) + 10px);z-index:3000;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+.toast{padding:12px 14px;border-radius:12px;background:#151B23;border:1px solid var(--bd2);font-size:14px;font-weight:600;box-shadow:0 8px 30px rgba(0,0,0,.5);animation:tin .2s ease-out}
+.toast.err{border-color:var(--red);color:var(--redl)}.toast.ok{border-color:#23513B;color:var(--grn)}
+@keyframes tin{from{transform:translateY(-12px);opacity:0}}
+.grid{position:absolute;inset:0;background-image:linear-gradient(#10151C 1px,transparent 1px),linear-gradient(90deg,#10151C 1px,transparent 1px);background-size:39px 39px;opacity:.7;pointer-events:none}
+/* carte */
+.map{position:absolute;inset:0;background:#0A0E13;z-index:0}
+.leaflet-container{background:#0A0E13;font-family:inherit}
+.leaflet-control-attribution{background:rgba(6,8,11,.6)!important;color:#93A0B0!important;font-size:9px}
+.leaflet-control-attribution a{color:#93A0B0!important}
+.mk{position:relative;width:30px;height:30px;display:flex;align-items:center;justify-content:center}
+.mk b{display:block;width:14px;height:14px;border:2px solid var(--bg)}
+.mk-h b{background:var(--red);transform:rotate(45deg)}
+.mk-f b{background:var(--blue);border-radius:50%}
+.mk-me b{width:20px;height:20px;border:3px solid #fff}
+.mk-me.mk-h b{box-shadow:0 0 18px rgba(255,77,87,.8)}.mk-me.mk-f b{box-shadow:0 0 18px rgba(59,164,255,.8)}
+.mk-ping:before,.mk-beacon:before{content:'';position:absolute;inset:-6px;border-radius:50%;border:1.5px solid var(--blue);box-shadow:0 0 16px rgba(59,164,255,.5)}
+.mk-beacon:before{border-color:var(--amb);animation:pul 1.2s ease-out infinite}
+@keyframes pul{from{transform:scale(.7);opacity:1}to{transform:scale(1.6);opacity:0}}
+.mk-l{position:absolute;left:50%;top:32px;transform:translateX(-50%);white-space:nowrap;padding:2px 7px;border-radius:6px;background:rgba(6,8,11,.9);border:1px solid var(--bd);font-size:11px;font-weight:600;color:var(--tx)}
+.poi{width:22px;height:22px;border-radius:50%;background:var(--bg);border:2px solid var(--tx);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700}
+.hud{position:absolute;left:12px;right:12px;top:calc(env(safe-area-inset-top) + 10px);z-index:500;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+.hud>*{pointer-events:auto}
+.hud .top{display:flex;gap:8px;align-items:stretch}
+.urg{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;width:74px;border-radius:14px;background:#2A1114;border:1.5px solid var(--red);color:var(--redl);font-family:var(--hd);font-size:11px;font-weight:700;letter-spacing:.1em}
+.clk{flex:1;display:flex;align-items:center;justify-content:space-between;padding:8px 14px;border-radius:14px;background:rgba(14,18,24,.94);border:1px solid var(--bd)}
+.clk .t{font-family:var(--hd);font-weight:700;font-size:30px;line-height:1.05;font-variant-numeric:tabular-nums}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{display:flex;align-items:center;gap:6px;min-height:30px;padding:0 10px;border-radius:15px;background:rgba(14,18,24,.94);border:1px solid var(--bd);font-size:12px;font-weight:600}
+.ban{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;background:rgba(14,18,24,.96);border:1.5px solid var(--bd2);font-size:13px;font-weight:600}
+.ban.r{background:#2A1114;border-color:var(--red);box-shadow:0 0 20px rgba(255,77,87,.25)}
+.ban.a{background:#1E1708;border-color:var(--amb)}
+.ban.b{background:#0D1C2B;border-color:var(--blue)}
+.mapbtns{position:absolute;right:12px;z-index:500;display:flex;flex-direction:column;gap:8px}
+.bot{position:absolute;left:0;right:0;bottom:0;z-index:500;display:flex;flex-direction:column;gap:10px;padding:12px 12px calc(12px + env(safe-area-inset-bottom));border-radius:20px 20px 0 0;background:#0A0D12;border-top:1px solid var(--bd)}
+.pws{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(76px,1fr);gap:6px;overflow-x:auto}
+.pw{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-height:60px;border-radius:12px;border:1px solid var(--bd2);background:var(--s1);font-size:12px;font-weight:700;padding:4px}
+.pw small{font-weight:500;font-size:11px;color:var(--tx2)}
+.pw.act{border-color:var(--red);background:#2A1114;box-shadow:0 0 14px rgba(255,77,87,.3)}.pw.act small{color:var(--redl);font-family:var(--hd);font-weight:700;font-size:13px}
+.fug .pw.act{border-color:var(--blue);background:#0D1C2B;box-shadow:0 0 14px rgba(59,164,255,.3)}.fug .pw.act small{color:var(--bluel)}
+.pw.off{border-color:var(--bd);color:var(--mu)}.pw.off small{color:var(--mu)}
+.acts{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:8px}
+/* feuilles et alertes */
+#sheet{position:fixed;inset:0;z-index:2000;display:none;align-items:flex-end;background:rgba(0,0,0,.6)}
+#sheet.on{display:flex}
+#sheet .box{width:100%;max-height:86dvh;overflow-y:auto;padding:16px 16px calc(18px + env(safe-area-inset-bottom));border-radius:20px 20px 0 0;background:#0A0D12;border-top:1px solid var(--bd2);display:flex;flex-direction:column;gap:12px}
+.ov{position:fixed;inset:0;z-index:2500;display:none;flex-direction:column;align-items:center;gap:20px;padding:calc(env(safe-area-inset-top) + 56px) 24px calc(28px + env(safe-area-inset-bottom));text-align:center}
+.ov.on{display:flex}
+#ov-ring{background:#12060A}
+.rings{position:relative;width:240px;height:240px;display:flex;align-items:center;justify-content:center}
+.rings i{position:absolute;inset:0;border-radius:50%;border:2px solid var(--red);animation:onde 1.6s ease-out infinite}
+.rings i+i{animation-delay:.8s}
+.rings b{width:108px;height:108px;border-radius:50%;background:var(--redb);box-shadow:0 0 60px rgba(255,77,87,.7);display:flex;align-items:center;justify-content:center}
+@keyframes onde{0%{transform:scale(.7);opacity:.9}100%{transform:scale(1.5);opacity:0}}
+#ov-msg{background:rgba(6,8,11,.97)}
+@media (prefers-reduced-motion:reduce){*{animation:none!important}}
+#qrc{width:240px;height:240px;border-radius:14px;background:#fff}
+video#cam{width:100%;border-radius:14px;background:#000;max-height:46dvh;object-fit:cover}
+</style>
+</head>
+<body>
+<div id="toasts"></div>
+
+<!-- CONNEXION -->
+<section class="screen" id="s-auth">
+<div class="grid"></div>
+<div class="pad" style="position:relative">
+  <div class="row lbl" style="margin-top:20px"><i class="dm"></i><span>Jeu grandeur nature</span></div>
+  <div class="col" style="margin-top:6vh">
+    <h1 class="hd" style="font-size:76px;line-height:.9;letter-spacing:.08em">HUNT</h1>
+    <p class="tx2" style="font-size:16px;line-height:1.45">La chasse à l'homme grandeur nature. Une zone, deux équipes, un chrono.</p>
+  </div>
+  <div class="seg" id="auth-seg"><button class="on" data-m="in">Se connecter</button><button data-m="up">Créer un compte</button></div>
+  <form id="auth-form" class="col" style="gap:12px" autocomplete="on">
+    <div class="fld" id="f-pseudo" style="display:none"><label class="lbl" for="a-pseudo">Pseudo</label><input class="in" id="a-pseudo" maxlength="20" autocomplete="nickname" placeholder="3 à 20 caractères"></div>
+    <div class="fld"><label class="lbl" for="a-email">E-mail</label><input class="in" id="a-email" type="email" autocomplete="email" required placeholder="toi@exemple.fr"></div>
+    <div class="fld"><label class="lbl" for="a-pass">Mot de passe</label><input class="in" id="a-pass" type="password" autocomplete="current-password" required minlength="8" placeholder="8 caractères minimum"></div>
+    <button class="btn w" id="a-go" type="submit">Se connecter</button>
+    <p id="a-msg" class="amb" style="font-size:14px;min-height:20px"></p>
+  </form>
+  <p class="mu" style="font-size:12px;line-height:1.5;margin-top:auto;text-align:center">Ta position n'est partagée que pendant une partie, avec ton accord.</p>
+</div>
+</section>
+
+<!-- ACCUEIL -->
+<section class="screen" id="s-home">
+<div class="pad" id="home-body"></div>
+<nav class="tabs" id="home-tabs"><button class="on" data-v="play">Jouer</button><button data-v="profile">Profil</button><button data-v="rank">Classement</button></nav>
+</section>
+
+<!-- NOUVELLE PARTIE -->
+<section class="screen" id="s-create">
+<div class="pad">
+  <div class="row"><button class="ib" id="c-back" aria-label="Retour">‹</button><h1 class="hd grow" style="font-size:22px">Nouvelle partie</h1><span class="lbl">1 / 2</span></div>
+  <div class="fld"><label class="lbl" for="c-name">Nom de la partie</label><input class="in" id="c-name" maxlength="40" placeholder="Opération Crépuscule"></div>
+  <div class="card" style="padding:0 16px">
+    <div class="set"><label for="c-max">Joueurs au maximum</label><input class="in" id="c-max" type="number" inputmode="numeric" min="2" max="50" value="10"></div>
+    <div class="set"><label for="c-h" class="row"><i class="dm"></i>Chasseurs</label><input class="in" id="c-h" type="number" inputmode="numeric" min="1" max="49" value="2"></div>
+    <div class="set"><span class="row"><i class="ci"></i>Fuyards</span><b class="hd blue" id="c-f" style="width:84px;text-align:center">8</b></div>
+    <div class="set"><label for="c-dur">Durée de la traque (min)</label><input class="in" id="c-dur" type="number" inputmode="numeric" min="1" max="600" value="45"></div>
+    <div class="set"><label for="c-hs">Avance des fuyards (min)</label><input class="in" id="c-hs" type="number" inputmode="numeric" min="0" max="60" value="5"></div>
+    <div class="set"><label for="c-gps">Actualisation GPS</label><select class="in" id="c-gps"><option value="2">2 s</option><option value="3">3 s</option><option value="5" selected>5 s</option><option value="10">10 s</option><option value="15">15 s</option><option value="30">30 s</option></select></div>
+  </div>
+  <span class="lbl">Ce que voient les équipes</span>
+  <div class="card" style="padding:0 16px">
+    <div class="set"><label for="c-hv">Les chasseurs voient les fuyards</label><select class="in" id="c-hv"><option value="ping" selected>Par repérage</option><option value="live">En direct</option><option value="powers">Pouvoirs seuls</option></select></div>
+    <div class="set"><label for="c-ping">Un repérage toutes les</label><select class="in" id="c-ping"><option value="30">30 s</option><option value="60">1 min</option><option value="120" selected>2 min</option><option value="180">3 min</option><option value="300">5 min</option></select></div>
+    <div class="set"><label for="c-fv">Les fuyards se voient entre eux</label><select class="in" id="c-fv"><option value="none" selected>Non</option><option value="live">Oui</option></select></div>
+    <div class="set"><label for="c-app">Alerte « chasseur proche »</label><select class="in" id="c-app"><option value="0">Désactivée</option><option value="50">à 50 m</option><option value="100" selected>à 100 m</option><option value="200">à 200 m</option></select></div>
+    <div class="set"><span>Fuyard hors zone : position visible</span><button type="button" class="sw" id="c-beacon" aria-pressed="true" aria-label="Balise hors zone"><i></i></button></div>
+    <div class="set"><span>Historique des déplacements</span><button type="button" class="sw" id="c-trails" aria-pressed="true" aria-label="Historique des déplacements"><i></i></button></div>
+  </div>
+  <span class="lbl">Capture</span>
+  <div class="card" style="padding:0 16px">
+    <div class="set"><label for="c-val">Validation</label><select class="in" id="c-val"><option value="both" selected>Les deux joueurs</option><option value="qr">QR code</option><option value="hunter">Chasseur seul</option></select></div>
+    <div class="set"><label for="c-dist">Distance maximale</label><select class="in" id="c-dist"><option value="0">Sans contrôle</option><option value="30">30 m</option><option value="75" selected>75 m</option><option value="150">150 m</option></select></div>
+  </div>
+  <span class="lbl">Pouvoirs (nombre d'utilisations par joueur)</span>
+  <div class="card" style="padding:0 16px" id="c-pows"></div>
+  <div class="fld"><label class="lbl" for="c-custom">Règles libres (facultatif)</label><textarea class="in" id="c-custom" maxlength="800" placeholder="Ex. : interdit d'entrer dans les bâtiments, pas de vélo…"></textarea></div>
+  <button class="btn w" id="c-next">Suivant : zone de jeu</button>
+</div>
+</section>
+
+<!-- ZONE -->
+<section class="screen" id="s-zone">
+<div class="map" id="zmap"></div>
+<div class="hud">
+  <div class="top"><button class="ib" id="z-back" aria-label="Retour">‹</button><div class="clk" style="padding:0 14px"><h1 class="hd" style="font-size:17px">Zone de jeu</h1><span class="lbl">2 / 2</span></div><button class="ib" id="z-tiles" aria-label="Changer de fond de carte">◐</button></div>
+  <div class="ban" id="z-hint">Touche la carte pour placer le centre de la zone.</div>
+</div>
+<div class="bot">
+  <div class="seg" id="z-mode"><button class="on" data-t="zone">Périmètre</button><button data-t="forbidden">Interdite</button><button data-t="danger">Danger</button><button data-t="poi">Repère</button><button data-t="bonus">Bonus</button></div>
+  <div class="row"><label class="lbl" for="z-r" style="flex:none">Rayon</label><input id="z-r" type="range" min="30" max="3000" step="10" value="300" class="grow"><b class="hd" id="z-rv" style="width:64px;text-align:right">300 m</b></div>
+  <div class="row"><button class="btn sm grow" id="z-me">Ma position</button><button class="btn sm grow" id="z-undo">Annuler le dernier</button></div>
+  <button class="btn w" id="z-create">Créer la partie</button>
+</div>
+</section>
+
+<!-- SALON -->
+<section class="screen" id="s-lobby"><div class="pad" id="lobby-body"></div></section>
+
+<!-- JEU -->
+<section class="screen" id="s-game">
+<div class="map" id="gmap"></div>
+<div class="hud">
+  <div class="top">
+    <button class="urg" id="g-urg"><span style="font-size:18px;line-height:1">✕</span><span>URGENCE</span></button>
+    <div class="clk"><div><div class="lbl" id="g-tl" style="font-size:11px">Temps restant</div><div class="t" id="g-t">--:--</div></div><div style="text-align:right"><div class="hd" id="g-team" style="font-size:12px;letter-spacing:.12em"></div><div class="tx2" id="g-gps" style="font-size:12px;margin-top:4px"></div></div></div>
+  </div>
+  <div class="chips" id="g-chips"></div>
+  <div id="g-bans" class="col" style="gap:6px"></div>
+</div>
+<div class="mapbtns" id="g-mb"><button class="ib" id="g-tiles" aria-label="Changer de fond de carte">◐</button><button class="ib" id="g-center" aria-label="Recentrer la carte">◎</button></div>
+<div class="bot" id="g-bot"><div class="pws" id="g-pws"></div><div class="acts" id="g-acts"></div></div>
+</section>
+
+<!-- RÉSULTATS -->
+<section class="screen" id="s-results"><div class="pad" id="res-body"></div></section>
+
+<div id="sheet"><div class="box" id="sheet-box"></div></div>
+<div class="ov" id="ov-ring">
+  <div class="row lbl" style="color:var(--redl);letter-spacing:.2em"><i class="dm"></i><span>Alerte chasseur</span></div>
+  <div class="rings"><i></i><i></i><b><svg aria-hidden="true" width="50" height="50" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4l2-2zM10 21h4"></path></svg></b></div>
+  <h1 class="hd" style="font-size:38px;line-height:1.05">UN CHASSEUR VOUS A REPÉRÉ !</h1>
+  <p id="ring-by" style="color:#F3C9CC;font-size:16px"></p>
+  <button class="btn w" id="ring-stop" style="margin-top:auto;align-self:stretch">Couper la sonnerie</button>
+</div>
+<div class="ov" id="ov-msg"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+<script>
+'use strict';
+const SB_URL = 'https://uahfxpsaeqpubyjnklkx.supabase.co';
+const SB_KEY = 'sb_publishable_-QFlINAbIgQVjuxCl_31vA_se5TaWgj';
+const sb = window.supabase ? window.supabase.createClient(SB_URL, SB_KEY) : null;
+
+const $ = (s, r) => (r || document).querySelector(s);
+const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const S = { user:null, profile:null, games:[], view:'play', gameId:null, st:null, stAt:0, since:null, pos:null, gpsErr:null, watchId:null, track:false,
+  ticking:false, again:false, tt:null, net:true, chan:null, gmap:null, zmap:null, mk:{}, lay:{}, layKey:'', sheetRender:null, capShown:null, elimShown:false,
+  wake:null, ac:null, sir:null, trailAt:0, trails:{}, centered:false, szPick:false, draft:null, zone:null, areas:[], zHist:[], zMode:'zone' };
+
+const POW = {
+  radar:['Radar','Voir tous les fuyards en direct'], proximity:['Proximité','Distance du fuyard le plus proche'], ring:['Sonnerie','Faire sonner le téléphone d\'un fuyard'],
+  sector:['Secteur','Révèle un secteur où se trouve un fuyard'], fastgps:['GPS rapide','Repérages quatre fois plus fréquents'],
+  camo:['Camouflage','Invisible aux repérages et au radar'], freeze:['Brouillage','Aveugle les chasseurs'], detect:['Détection','Distance et direction du chasseur le plus proche'],
+  shield:['Bouclier','Ni capture ni sonnerie'], decoy:['Leurre','Affiche une fausse position aux chasseurs'] };
+const POW_DEF = { radar:[30,300,3], proximity:[60,240,3], ring:[10,180,3], sector:[60,240,3], fastgps:[120,600,2], camo:[120,600,2], freeze:[20,900,1], detect:[60,240,3], shield:[45,600,1], decoy:[90,900,1] };
+const HUNTER_P = ['radar','proximity','ring','sector','fastgps'], DIRS = ['nord','nord-est','est','sud-est','sud','sud-ouest','ouest','nord-ouest'];
+const TILES = {
+  dark:{ url:'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', opt:{ subdomains:'abcd', maxZoom:20, attribution:'© OpenStreetMap © CARTO' } },
+  std:{ url:'https://tile.openstreetmap.org/{z}/{x}/{y}.png', opt:{ maxZoom:19, attribution:'© OpenStreetMap' } },
+  sat:{ url:'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', opt:{ maxZoom:19, attribution:'Images © Esri' } } };
+
+/* ---------- utilitaires ---------- */
+function put(el, html){ if (el._h === html && el.innerHTML) return; el._h = html; el.innerHTML = html; }
+function show(id){ $$('.screen').forEach(s => s.classList.toggle('on', s.id === id)); }
+function toast(msg, kind){ const t = document.createElement('div'); t.className = 'toast ' + (kind || ''); t.textContent = msg; $('#toasts').appendChild(t); setTimeout(() => t.remove(), 4200); }
+function fmt(s){ s = Math.max(0, Math.round(s)); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); }
+function fmtDur(s){ if (s == null) return '—'; s = Math.round(s); const m = Math.floor(s / 60), r = s % 60; return m ? m + ' min ' + String(r).padStart(2, '0') + ' s' : r + ' s'; }
+function ago(s){ if (s == null) return ''; return s < 60 ? 'il y a ' + s + ' s' : 'il y a ' + Math.floor(s / 60) + ' min' + (s % 60 ? ' ' + (s % 60) + ' s' : ''); }
+function hav(a, b){ const R = 6371000, q = Math.PI / 180, dl = (b.lat - a.lat) * q, dn = (b.lng - a.lng) * q; const h = Math.sin(dl / 2) ** 2 + Math.cos(a.lat * q) * Math.cos(b.lat * q) * Math.sin(dn / 2) ** 2; return 2 * R * Math.asin(Math.min(1, Math.sqrt(h))); }
+function level(xp){ return 1 + Math.floor((xp || 0) / 250); }
+function avatar(p, lg){ const c = 'av' + (lg ? ' lg' : ''); return p && p.avatar_url ? '<img class="' + c + '" src="' + esc(p.avatar_url) + '" alt="">' : '<div class="' + c + '">' + esc(((p && p.pseudo) || '?').charAt(0).toUpperCase()) + '</div>'; }
+function teamDot(t){ return t === 'hunter' ? '<i class="dm"></i>' : t === 'fugitive' ? '<i class="ci"></i>' : '<i class="sq"></i>'; }
+function teamName(t){ return t === 'hunter' ? 'CHASSEUR' : t === 'fugitive' ? 'FUYARD' : 'À RÉPARTIR'; }
+async function rpc(fn, args){ const r = await sb.rpc(fn, args || {}); if (r.error) throw new Error(r.error.message || 'Erreur'); return r.data; }
+async function act(fn, args, okMsg){ try { const d = await rpc(fn, args); if (okMsg) toast(okMsg, 'ok'); tickNow(); return d === null || d === undefined ? true : d; } catch (e) { toast(e.message, 'err'); return null; } }
+function elapsed(){ return S.st ? (Date.now() - S.stAt) / 1000 : 0; }
+function left(v){ return v == null ? null : Math.max(0, v - (S.st && S.st.game.status === 'running' ? elapsed() : 0)); }
+
+/* ---------- son, vibration, écran allumé ---------- */
+function audio(){ try { if (!S.ac) S.ac = new (window.AudioContext || window.webkitAudioContext)(); if (S.ac.state === 'suspended') S.ac.resume(); } catch (e) {} return S.ac; }
+document.addEventListener('pointerdown', audio, { passive:true });
+function beep(f, d, n){ const ac = audio(); if (!ac) return; n = n || 1; for (let i = 0; i < n; i++) { const o = ac.createOscillator(), g = ac.createGain(), t = ac.currentTime + i * (d + 0.08); o.type = 'square'; o.frequency.value = f; g.gain.setValueAtTime(0.18, t); g.gain.exponentialRampToValueAtTime(0.001, t + d); o.connect(g); g.connect(ac.destination); o.start(t); o.stop(t + d); } }
+function vib(p){ try { if (navigator.vibrate) navigator.vibrate(p); } catch (e) {} }
+function siren(sec){ stopSiren(); const ac = audio(); if (!ac) return; const o = ac.createOscillator(), g = ac.createGain(), t = ac.currentTime; o.type = 'sawtooth';
+  for (let i = 0; i < sec * 2; i++) { o.frequency.setValueAtTime(880, t + i * 0.5); o.frequency.linearRampToValueAtTime(1320, t + i * 0.5 + 0.25); o.frequency.linearRampToValueAtTime(880, t + i * 0.5 + 0.5); }
+  g.gain.value = 0.4; o.connect(g); g.connect(ac.destination); o.start(t); o.stop(t + sec); S.sir = o; }
+function stopSiren(){ try { if (S.sir) S.sir.stop(); } catch (e) {} S.sir = null; }
+async function wakeOn(){ try { if ('wakeLock' in navigator && !S.wake) { S.wake = await navigator.wakeLock.request('screen'); S.wake.addEventListener('release', () => { S.wake = null; }); } } catch (e) {} }
+function wakeOff(){ try { if (S.wake) S.wake.release(); } catch (e) {} S.wake = null; }
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') { if (S.track) wakeOn(); if (S.gameId) tickNow(); } });
+
+/* ---------- feuille et messages plein écran ---------- */
+function openSheet(render){ S.sheetRender = render; $('#sheet').classList.add('on'); render(); }
+function closeSheet(){ if (S.onSheetClose) { const f = S.onSheetClose; S.onSheetClose = null; f(); } S.sheetRender = null; $('#sheet').classList.remove('on'); $('#sheet-box').innerHTML = ''; $('#sheet-box')._h = null; }
+$('#sheet').addEventListener('click', e => { if (e.target.id === 'sheet') closeSheet(); });
+function sheetHead(t){ return '<div class="row sp"><h2 class="hd" style="font-size:20px">' + esc(t) + '</h2><button class="ib" data-a="close" aria-label="Fermer">✕</button></div>'; }
+function msgBox(html){ const o = $('#ov-msg'); o.innerHTML = html; o.classList.add('on'); }
+function msgClose(){ $('#ov-msg').classList.remove('on'); $('#ov-msg').innerHTML = ''; }
+function confirmBox(title, text, yes, cb, danger){ msgBox('<div style="margin-top:14vh" class="col"><h1 class="hd" style="font-size:30px;line-height:1.1">' + esc(title) + '</h1><p class="tx2" style="font-size:16px;line-height:1.45">' + esc(text) + '</p></div><div class="col" style="margin-top:auto;align-self:stretch"><button class="btn ' + (danger ? 'r' : 'w') + '" id="cf-y">' + esc(yes) + '</button><button class="btn" id="cf-n">Annuler</button></div>');
+  $('#cf-y').onclick = () => { msgClose(); cb(); }; $('#cf-n').onclick = msgClose; }
+
+/* ---------- connexion ---------- */
+let authMode = 'in';
+$('#auth-seg').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; authMode = b.dataset.m; $$('#auth-seg button').forEach(x => x.classList.toggle('on', x === b)); $('#f-pseudo').style.display = authMode === 'up' ? 'flex' : 'none'; $('#a-go').textContent = authMode === 'up' ? 'Créer mon compte' : 'Se connecter'; $('#a-pass').autocomplete = authMode === 'up' ? 'new-password' : 'current-password'; $('#a-msg').textContent = ''; });
+$('#auth-form').addEventListener('submit', async e => { e.preventDefault(); const email = $('#a-email').value.trim(), pass = $('#a-pass').value, pseudo = $('#a-pseudo').value.trim(), m = $('#a-msg'); m.textContent = ''; $('#a-go').disabled = true;
+  try {
+    if (authMode === 'up') {
+      if (!/^[\p{L}\p{N}_ -]{3,20}$/u.test(pseudo)) throw new Error('Pseudo : 3 à 20 caractères (lettres, chiffres, espace, - et _).');
+      const r = await sb.auth.signUp({ email:email, password:pass, options:{ data:{ pseudo:pseudo }, emailRedirectTo: location.origin + location.pathname } });
+      if (r.error) throw r.error;
+      if (!r.data.session) { m.className = 'grn'; m.textContent = 'Compte créé. Ouvre le lien reçu par e-mail, puis connecte-toi.'; }
+    } else { const r = await sb.auth.signInWithPassword({ email:email, password:pass }); if (r.error) throw r.error; }
+  } catch (err) { m.className = 'amb'; const t = err.message || 'Erreur'; m.textContent = /Invalid login/i.test(t) ? 'E-mail ou mot de passe incorrect.' : /already registered/i.test(t) ? 'Un compte existe déjà avec cet e-mail.' : /not confirmed/i.test(t) ? 'Confirme d\'abord ton e-mail avec le lien reçu.' : t; }
+  $('#a-go').disabled = false; });
+
+/* ---------- accueil, profil, classement ---------- */
+$('#home-tabs').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; S.view = b.dataset.v; renderHome(); });
+async function loadHome(){ show('s-home'); renderHome();
+  try { const r = await sb.from('profiles').select('*').eq('id', S.user.id).maybeSingle(); S.profile = r.data || { pseudo:'Agent', xp:0, wins:0, catches:0, games_played:0, survival_total_s:0, survival_games:0 }; } catch (e) {}
+  try { S.games = await rpc('my_games'); } catch (e) { S.games = []; }
+  renderHome(); }
+function renderHome(){ $$('#home-tabs button').forEach(b => b.classList.toggle('on', b.dataset.v === S.view)); const p = S.profile || { pseudo:'…', xp:0 }, el = $('#home-body');
+  const lv = level(p.xp), pct = Math.round(((p.xp || 0) % 250) / 2.5);
+  const head = '<div class="row">' + avatar(p, S.view === 'profile') + '<div class="grow col" style="gap:6px"><div class="row sp"><b class="hd" style="font-size:20px">' + esc(p.pseudo) + '</b><span class="lbl">Niveau ' + lv + '</span></div><div class="bar"><i style="width:' + pct + '%"></i></div>' + (S.view === 'profile' ? '<span class="tx2" style="font-size:13px">' + (p.xp || 0) + ' XP · niveau suivant à ' + (lv * 250) + '</span>' : '') + '</div></div>';
+  if (S.view === 'play') {
+    const live = S.games.find(g => g.status !== 'ended' && g.pstatus !== 'left');
+    const rec = S.games.filter(g => g.status === 'ended').slice(0, 4).map(g => '<div class="li">' + teamDot(g.team) + '<div class="grow"><div style="font-weight:600">' + esc(g.name) + '</div><div class="mu" style="font-size:13px">' + (g.team === 'hunter' ? 'Chasseur · ' + g.catches + ' capture' + (g.catches > 1 ? 's' : '') : g.team === 'fugitive' ? 'Fuyard · survie ' + fmtDur(g.survival_s) : 'Non joué') + '</div></div><span style="font-size:13px;font-weight:600" class="' + (g.winner === g.team ? 'grn' : 'tx2') + '">' + (g.winner === 'none' ? 'Arrêtée' : g.winner === g.team ? 'Victoire' : 'Défaite') + '</span></div>').join('');
+    el.innerHTML = head + (live ? '<button class="card col" data-a="resume" data-id="' + live.id + '" style="text-align:left;border-color:var(--grn);gap:4px"><span class="lbl grn">Partie en cours</span><b class="hd" style="font-size:20px">' + esc(live.name) + '</b><span class="tx2" style="font-size:14px">Touche pour y revenir</span></button>' : '') +
+      '<button class="card col" data-a="create" style="text-align:left;border-color:var(--red);box-shadow:0 0 28px rgba(255,77,87,.18);gap:8px"><span class="row lbl red"><i class="dm"></i>Organisateur</span><b class="hd" style="font-size:26px;line-height:1.1">Créer une partie</b><span class="tx2" style="font-size:14px">Choisis la zone, la durée, les équipes et les pouvoirs.</span></button>' +
+      '<div class="card col" style="gap:12px"><label class="hd" for="j-code" style="font-size:20px">Rejoindre avec un code</label><div class="row"><input class="in grow hd" id="j-code" maxlength="6" autocapitalize="characters" autocomplete="off" placeholder="ABC123" style="font-size:22px;letter-spacing:.28em;text-align:center;background:var(--bg)" value="' + esc(S.joinCode || '') + '"><button class="btn b" data-a="join">Entrer</button></div></div>' +
+      (rec ? '<span class="lbl">Dernières parties</span><div class="card" style="padding:0 16px">' + rec + '</div>' : '');
+  } else if (S.view === 'profile') {
+    const avg = p.survival_games ? Math.round(p.survival_total_s / p.survival_games) : null;
+    const stat = (v, l, c) => '<div class="card col" style="gap:4px"><b class="hd ' + (c || '') + '" style="font-size:26px;line-height:1">' + v + '</b><span class="mu" style="font-size:13px">' + l + '</span></div>';
+    const hist = S.games.filter(g => g.status === 'ended').map(g => '<div class="li">' + teamDot(g.team) + '<span class="grow" style="font-weight:600">' + esc(g.name) + '</span><span class="mu" style="font-size:13px">' + (g.team === 'hunter' ? g.catches + ' capt.' : g.team === 'fugitive' ? (g.rank ? g.rank + 'e · ' : '') + fmtDur(g.survival_s) : '—') + '</span></div>').join('');
+    el.innerHTML = head + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">' + stat(p.wins || 0, 'Victoires') + stat(p.catches || 0, 'Personnes attrapées', 'red') + stat(avg == null ? '—' : fmtDur(avg), 'Survie moyenne', 'blue') + stat(p.games_played || 0, 'Parties jouées') + '</div>' +
+      '<div class="card col" style="gap:12px"><div class="fld"><label class="lbl" for="p-pseudo">Pseudo</label><div class="row"><input class="in grow" id="p-pseudo" maxlength="20" value="' + esc(p.pseudo) + '"><button class="btn sm" data-a="savepseudo">Enregistrer</button></div></div><label class="btn sm" style="cursor:pointer">Changer la photo<input type="file" id="p-photo" accept="image/*" style="display:none"></label></div>' +
+      (hist ? '<span class="lbl">Historique</span><div class="card" style="padding:0 16px">' + hist + '</div>' : '') + '<button class="lnk" data-a="logout" style="align-self:center">Se déconnecter</button>';
+    const f = $('#p-photo'); if (f) f.onchange = uploadPhoto;
+  } else { el.innerHTML = head + '<span class="lbl">Classement général</span><div class="card" style="padding:0 16px" id="rank-list"><div class="li mu">Chargement…</div></div>'; loadRank(); } }
+async function loadRank(){ try { const r = await sb.from('profiles').select('id,pseudo,avatar_url,xp,wins,catches').order('xp', { ascending:false }).limit(50); if (r.error) throw r.error; const el = $('#rank-list'); if (!el) return;
+    el.innerHTML = r.data.map((p, i) => '<div class="li"' + (p.id === S.user.id ? ' style="background:#13202E;margin:0 -16px;padding:0 16px"' : '') + '><b class="hd" style="width:26px;color:' + (i === 0 ? 'var(--amb)' : p.id === S.user.id ? 'var(--blue)' : 'var(--tx2)') + '">' + (i + 1) + '</b>' + '<span class="grow" style="font-weight:600">' + esc(p.pseudo) + (p.id === S.user.id ? ' (toi)' : '') + '</span><span class="tx2" style="font-size:13px">Niv. ' + level(p.xp) + ' · ' + p.xp + ' XP</span></div>').join('') || '<div class="li mu">Aucun joueur pour l\'instant.</div>';
+  } catch (e) { const el = $('#rank-list'); if (el) el.innerHTML = '<div class="li amb">Classement indisponible.</div>'; } }
+async function uploadPhoto(e){ const f = e.target.files[0]; if (!f) return; try { const img = await new Promise((ok, ko) => { const i = new Image(); i.onload = () => ok(i); i.onerror = ko; i.src = URL.createObjectURL(f); });
+    const c = document.createElement('canvas'), s = Math.min(img.width, img.height); c.width = c.height = 256; c.getContext('2d').drawImage(img, (img.width - s) / 2, (img.height - s) / 2, s, s, 0, 0, 256, 256);
+    const blob = await new Promise(ok => c.toBlob(ok, 'image/jpeg', 0.85)); const path = S.user.id + '/' + Date.now() + '.jpg';
+    const up = await sb.storage.from('avatars').upload(path, blob, { contentType:'image/jpeg' }); if (up.error) throw up.error;
+    const url = sb.storage.from('avatars').getPublicUrl(path).data.publicUrl; S.profile = await rpc('update_profile', { p_pseudo:null, p_avatar:url }); toast('Photo mise à jour', 'ok'); renderHome();
+  } catch (err) { toast('Photo non enregistrée : ' + (err.message || 'erreur'), 'err'); } }
+$('#home-body').addEventListener('click', async e => { const b = e.target.closest('[data-a]'); if (!b) return; const a = b.dataset.a;
+  if (a === 'create') openCreate();
+  else if (a === 'resume') enterGame(b.dataset.id);
+  else if (a === 'join') { const code = ($('#j-code').value || '').trim().toUpperCase(); if (code.length < 6) return toast('Le code fait 6 caractères', 'err'); try { const id = await rpc('join_game', { p_code:code }); S.joinCode = ''; enterGame(id); } catch (err) { toast(err.message, 'err'); } }
+  else if (a === 'savepseudo') { try { S.profile = await rpc('update_profile', { p_pseudo:$('#p-pseudo').value, p_avatar:null }); toast('Pseudo enregistré', 'ok'); renderHome(); } catch (err) { toast(err.message, 'err'); } }
+  else if (a === 'logout') { await sb.auth.signOut(); } });
+
+/* ---------- création de partie ---------- */
+function openCreate(){ const box = $('#c-pows');
+  if (!box.innerHTML) box.innerHTML = Object.keys(POW).map(k => '<div class="set"><div class="grow"><div class="row" style="font-weight:600">' + (HUNTER_P.includes(k) ? '<i class="dm"></i>' : '<i class="ci"></i>') + POW[k][0] + '</div><div class="mu" style="font-size:12px">' + POW[k][1] + ' · ' + (POW_DEF[k][0] >= 60 ? POW_DEF[k][0] / 60 + ' min' : POW_DEF[k][0] + ' s') + ', recharge ' + POW_DEF[k][1] / 60 + ' min</div></div><input class="in" type="number" inputmode="numeric" min="1" max="9" value="' + POW_DEF[k][2] + '" data-pu="' + k + '" aria-label="Utilisations ' + POW[k][0] + '" style="width:56px"><button type="button" class="sw' + (HUNTER_P.includes(k) ? '' : ' bl') + '" aria-pressed="true" data-p="' + k + '" aria-label="' + POW[k][0] + '"><i></i></button></div>').join('');
+  show('s-create'); updF(); }
+function updF(){ const m = +$('#c-max').value || 2, h = +$('#c-h').value || 1; $('#c-f').textContent = Math.max(1, m - h); }
+$('#c-max').oninput = updF; $('#c-h').oninput = updF;
+$('#s-create').addEventListener('click', e => { const s = e.target.closest('.sw'); if (s) s.setAttribute('aria-pressed', s.getAttribute('aria-pressed') === 'true' ? 'false' : 'true'); });
+$('#c-back').onclick = () => show('s-home');
+$('#c-next').onclick = () => { const name = $('#c-name').value.trim(); if (name.length < 2) return toast('Donne un nom à la partie', 'err');
+  const powers = {}; $$('#c-pows [data-p]').forEach(b => { const k = b.dataset.p; powers[k] = { on: b.getAttribute('aria-pressed') === 'true', uses: Math.max(1, Math.min(9, +$('[data-pu="' + k + '"]').value || 1)) }; });
+  S.draft = { name:name, max_players:+$('#c-max').value || 10, n_hunters:+$('#c-h').value || 1, duration_min:+$('#c-dur').value || 30, head_start_min:Math.max(0, +$('#c-hs').value || 0),
+    rules:{ gps_interval_s:+$('#c-gps').value, hunter_vision:$('#c-hv').value, ping_interval_s:+$('#c-ping').value, fugitive_vision:$('#c-fv').value, approach_alert_m:+$('#c-app').value,
+      beacon_out_zone:$('#c-beacon').getAttribute('aria-pressed') === 'true', trails:$('#c-trails').getAttribute('aria-pressed') === 'true', validation:$('#c-val').value, capture_dist_m:+$('#c-dist').value, custom:$('#c-custom').value.trim(), powers:powers } };
+  openZone(); };
+
+/* ---------- cartes ---------- */
+function setTiles(map, key){ if (map._hl) map.removeLayer(map._hl); map._hl = L.tileLayer(TILES[key].url, TILES[key].opt).addTo(map); map._hk = key; }
+function nextTiles(map){ const ks = ['dark','std','sat']; setTiles(map, ks[(ks.indexOf(map._hk) + 1) % 3]); toast({ dark:'Carte sombre', std:'Carte standard', sat:'Vue satellite' }[map._hk]); }
+function mkMap(id){ const m = L.map(id, { zoomControl:false, attributionControl:true }).setView([46.6, 2.4], 5); setTiles(m, 'dark'); return m; }
+const AREA_STYLE = { forbidden:{ color:'#FF4D57', fillColor:'#FF4D57', fillOpacity:.22, weight:1.5 }, danger:{ color:'#FFB020', fillColor:'#FFB020', fillOpacity:.14, weight:1.5, dashArray:'5 5' }, bonus:{ color:'#3BA4FF', fillColor:'#3BA4FF', fillOpacity:.14, weight:1.5 }, poi:{ color:'#F2F5F8', fillColor:'#F2F5F8', fillOpacity:.1, weight:1.5 } };
+const AREA_NAME = { forbidden:'Zone interdite', danger:'Zone dangereuse', bonus:'Point bonus', poi:'Repère' };
+function drawStatic(map, group, zone, areas, search){ group.clearLayers();
+  if (zone) L.circle([zone.lat, zone.lng], { radius:zone.r, color:'#F2F5F8', weight:2, dashArray:'8 6', fillColor:'#F2F5F8', fillOpacity:.04, interactive:false }).addTo(group);
+  (areas || []).forEach(a => { L.circle([a.lat, a.lng], Object.assign({ radius:a.r, interactive:false }, AREA_STYLE[a.type] || AREA_STYLE.poi)).addTo(group);
+    L.marker([a.lat, a.lng], { interactive:false, icon:L.divIcon({ className:'', html:'<span class="mk-l" style="top:-10px;border-color:' + (AREA_STYLE[a.type] || AREA_STYLE.poi).color + '">' + esc(a.name || AREA_NAME[a.type]) + '</span>', iconSize:[0, 0] }) }).addTo(group); });
+  if (search) L.circle([search.lat, search.lng], { radius:search.r, color:'#FFB020', weight:3, fillColor:'#FFB020', fillOpacity:.08, interactive:false }).addTo(group); }
+
+/* ---------- éditeur de zone ---------- */
+function openZone(){ show('s-zone'); S.zone = null; S.areas = []; S.zHist = []; S.zMode = 'zone';
+  if (!S.zmap) { S.zmap = mkMap('zmap'); S.zlay = L.layerGroup().addTo(S.zmap);
+    S.zmap.on('click', ev => { const r = +$('#z-r').value, p = { lat:ev.latlng.lat, lng:ev.latlng.lng, r:r };
+      if (S.zMode === 'zone') { S.zHist.push({ zone:S.zone }); S.zone = p; } else { if (S.areas.length >= 40) return toast('40 zones au maximum', 'err'); S.areas.push(Object.assign({ type:S.zMode, name:AREA_NAME[S.zMode] }, p)); S.zHist.push({ area:true }); }
+      zRedraw(); }); }
+  setTimeout(() => S.zmap.invalidateSize(), 60); zRedraw(); }
+function zRedraw(){ drawStatic(S.zmap, S.zlay, S.zone, S.areas, null); $$('#z-mode button').forEach(b => b.classList.toggle('on', b.dataset.t === S.zMode));
+  $('#z-hint').textContent = S.zMode === 'zone' ? (S.zone ? 'Périmètre placé. Règle le rayon ou touche ailleurs pour le déplacer.' : 'Touche la carte pour placer le centre de la zone.') : 'Touche la carte pour ajouter : ' + AREA_NAME[S.zMode].toLowerCase() + '.'; }
+$('#z-mode').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; S.zMode = b.dataset.t; const r = S.zMode === 'zone' ? (S.zone ? S.zone.r : 300) : 40; $('#z-r').value = r; $('#z-rv').textContent = r + ' m'; zRedraw(); });
+$('#z-r').oninput = e => { const r = +e.target.value; $('#z-rv').textContent = r + ' m'; if (S.zMode === 'zone' && S.zone) { S.zone.r = r; zRedraw(); } else if (S.zMode !== 'zone' && S.areas.length && S.areas[S.areas.length - 1].type === S.zMode) { S.areas[S.areas.length - 1].r = r; zRedraw(); } };
+$('#z-undo').onclick = () => { const h = S.zHist.pop(); if (!h) return; if (h.area) S.areas.pop(); else S.zone = h.zone; zRedraw(); };
+$('#z-me').onclick = () => { if (!navigator.geolocation) return toast('GPS indisponible sur cet appareil', 'err'); toast('Recherche de ta position…'); navigator.geolocation.getCurrentPosition(p => S.zmap.setView([p.coords.latitude, p.coords.longitude], 16), () => toast('Position refusée ou indisponible', 'err'), { enableHighAccuracy:true, timeout:12000 }); };
+$('#z-tiles').onclick = () => nextTiles(S.zmap);
+$('#z-back').onclick = () => show('s-create');
+$('#z-create').onclick = async () => { const go = async () => { const d = Object.assign({}, S.draft, { zone:S.zone, areas:S.areas }); try { const r = await rpc('create_game', { p:d }); enterGame(r.id); } catch (e) { toast(e.message, 'err'); } };
+  if (!S.zone) confirmBox('Aucun périmètre', 'La partie n\'aura pas de limite de zone. Tu peux revenir placer un périmètre.', 'Créer sans périmètre', go); else go(); };
+
+/* ---------- boucle de partie ---------- */
+function enterGame(id){ leaveLocal(true); S.gameId = id; S.since = null; S.st = null; S.capShown = null; S.elimShown = false; S.centered = false; S.net = true;
+  try { S.chan = sb.channel('hunt-' + id).on('postgres_changes', { event:'INSERT', schema:'public', table:'events', filter:'game_id=eq.' + id }, () => tickNow()).subscribe(); } catch (e) {}
+  tick(); }
+function leaveLocal(keep){ stopGPS(); clearTimeout(S.tt); S.tt = null; if (S.chan) { try { sb.removeChannel(S.chan); } catch (e) {} S.chan = null; } S.gameId = null; S.st = null; stopSiren(); $('#ov-ring').classList.remove('on'); msgClose(); closeSheet();
+  Object.keys(S.mk).forEach(k => { if (S.gmap) S.gmap.removeLayer(S.mk[k]); }); S.mk = {}; S.layKey = ''; S.trails = {}; if (S.acc && S.gmap) { S.gmap.removeLayer(S.acc); } S.acc = null; if (S.glay) S.glay.clearLayers(); if (S.gtr) S.gtr.clearLayers(); S.trailAt = 0; S.szPick = false; if (!keep) loadHome(); }
+function nextDelay(){ const st = S.st; if (!st) return 3000; const s = st.game.status; if (s === 'running') return Math.max(2, st.game.rules.gps_interval_s || 5) * 1000; return s === 'paused' ? 4000 : 3000; }
+function tickNow(){ if (!S.gameId) return; if (S.ticking) { S.again = true; return; } tick(); }
+async function tick(){ if (!S.gameId || S.ticking) return; S.ticking = true; clearTimeout(S.tt); const gid = S.gameId; let stop = false;
+  try { let pos = null; if (S.track && S.pos && Date.now() - S.pos.t < 20000) pos = { lat:S.pos.lat, lng:S.pos.lng, acc:S.pos.acc, heading:S.pos.heading, speed:S.pos.speed };
+    const st = await rpc('tick', { p_game:gid, p_pos:pos, p_since:S.since || 0 }); S.net = true; if (S.gameId === gid) { onState(st); stop = st.game.status === 'ended'; }
+  } catch (e) { if (/participez pas|introuvable/i.test(e.message)) { toast('Tu ne fais plus partie de cette partie', 'err'); S.ticking = false; leaveLocal(); return; } S.net = false; if (S.st) renderGame(); }
+  S.ticking = false; if (S.gameId === gid && !stop) { S.tt = setTimeout(tick, S.again ? 60 : nextDelay()); S.again = false; } }
+
+function onState(st){ const first = S.since === null; S.st = st; S.stAt = Date.now();
+  if (first) S.since = st.last_event; else { (st.events || []).forEach(ev => { if (ev.id > S.since) handleEvent(ev); }); S.since = Math.max(S.since, st.last_event || 0); }
+  const s = st.game.status, me = st.me, shouldTrack = s === 'running' && me.status === 'active' && me.consent;
+  if (shouldTrack) startGPS(); else stopGPS();
+  if (s === 'lobby') { show('s-lobby'); renderLobby(); }
+  else if (s === 'ended') { stopGPS(); closeSheet(); msgClose(); show('s-results'); renderResults(); }
+  else { if (!$('#s-game').classList.contains('on')) { show('s-game'); initGameMap(); } renderGame(); checkOverlays(); }
+  if (S.sheetRender) S.sheetRender(); }
+
+function handleEvent(ev){ const d = ev.data || {}, me = S.user.id, st = S.st, team = st.me.team;
+  switch (ev.kind) {
+    case 'start': toast('La partie commence !', 'ok'); beep(880, 0.15, 3); vib([200, 100, 200]); break;
+    case 'pause': toast('Partie mise en pause'); break;
+    case 'resume': toast('La partie reprend', 'ok'); beep(880, 0.12, 2); break;
+    case 'elim': toast(ev.user === me ? 'Tu es éliminé' : (d.fugitive || 'Un fuyard') + ' a été attrapé' + (d.hunter ? ' par ' + d.hunter : ''), ev.user === me ? 'err' : ''); beep(440, 0.2, 2); vib(300); break;
+    case 'left': if (ev.user !== me) toast((d.pseudo || 'Un joueur') + ' a quitté la partie'); break;
+    case 'ring': $('#ring-by').textContent = 'Sonnerie déclenchée par ' + (d.hunter || 'un chasseur') + '.'; $('#ov-ring').classList.add('on'); siren(d.dur || 10); vib([500, 200, 500, 200, 500, 200, 500]); clearTimeout(S.ringT); S.ringT = setTimeout(() => $('#ov-ring').classList.remove('on'), (d.dur || 10) * 1000 + 600); break;
+    case 'power': if (ev.actor === me) break; if (d.power === 'freeze' && team === 'hunter') { toast('Brouillage : ta carte est aveuglée', 'err'); beep(220, 0.3, 2); vib(400); } else if (d.power === 'ring') toast(d.pseudo + ' fait sonner ' + (d.target || 'un fuyard')); else toast(d.pseudo + ' active ' + ((POW[d.power] || [d.power])[0])); break;
+    case 'approach': toast('Chasseur à environ ' + d.m + ' m !', 'err'); beep(660, 0.12, 4); vib([150, 80, 150, 80, 150]); break;
+    case 'out_zone': toast(team === 'fugitive' ? 'Hors zone : ta position est visible des chasseurs' : 'Tu es hors zone ou en zone interdite', 'err'); beep(330, 0.25, 2); vib(300); break;
+    case 'capture_req': beep(520, 0.2, 3); vib([300, 100, 300]); break;
+    case 'dispute': toast(st.me.is_org ? 'Capture contestée : à toi de trancher' : (d.fugitive || 'Le fuyard') + ' conteste la capture', 'err'); beep(520, 0.2, 2); break;
+    case 'capture_rejected': toast('Capture rejetée par l\'organisateur'); break;
+    case 'search_zone': toast(d.on ? 'Zone de recherche déclenchée' : 'Zone de recherche retirée'); if (d.on) beep(740, 0.15, 2); break;
+    case 'zone': toast('La zone de jeu a changé'); beep(740, 0.15, 2); break;
+    case 'kicked': toast('L\'organisateur t\'a retiré de la partie', 'err'); break;
+    case 'end': beep(660, 0.25, 3); vib([300, 100, 300, 100, 600]); break;
+  } }
+
+/* ---------- GPS : uniquement pendant une partie en cours ---------- */
+function startGPS(){ if (S.track) return; S.track = true; wakeOn(); if (!navigator.geolocation) { S.gpsErr = 'GPS indisponible sur cet appareil'; return; }
+  S.watchId = navigator.geolocation.watchPosition(p => { const c = p.coords; S.gpsErr = null; S.pos = { lat:c.latitude, lng:c.longitude, acc:isFinite(c.accuracy) ? c.accuracy : null, heading:(c.heading == null || isNaN(c.heading)) ? null : c.heading, speed:(c.speed == null || isNaN(c.speed)) ? null : c.speed, t:Date.now() }; drawMe(); },
+    err => { S.gpsErr = err.code === 1 ? 'Autorise la localisation pour jouer' : 'GPS indisponible'; if (S.st) renderGame(); }, { enableHighAccuracy:true, maximumAge:0, timeout:20000 }); }
+function stopGPS(){ if (S.watchId != null && navigator.geolocation) navigator.geolocation.clearWatch(S.watchId); S.watchId = null; S.track = false; S.pos = null; wakeOff(); }
+
+/* ---------- salon ---------- */
+function renderLobby(){ const st = S.st, g = st.game, me = st.me, r = g.rules, el = $('#lobby-body'); const miss = st.players.filter(p => !p.consent);
+  const vis = r.hunter_vision === 'ping' ? 'repérage toutes les ' + (r.ping_interval_s >= 60 ? r.ping_interval_s / 60 + ' min' : r.ping_interval_s + ' s') : r.hunter_vision === 'live' ? 'fuyards visibles en direct' : 'fuyards visibles par pouvoirs';
+  const list = st.players.map(p => '<div class="li">' + teamDot(p.team) + '<span class="grow" style="font-weight:600">' + esc(p.pseudo) + (p.id === me.id ? ' <span class="mu" style="font-weight:400">· toi</span>' : '') + (p.id === g.organizer_id ? ' <span class="mu" style="font-weight:400">· organisateur</span>' : '') + '</span>' +
+    (me.is_org ? '<button class="btn sm" data-a="team" data-id="' + p.id + '" data-t="' + (p.team || '') + '" style="min-height:36px;font-size:11px;padding:0 10px;color:' + (p.team === 'hunter' ? 'var(--red)' : p.team === 'fugitive' ? 'var(--blue)' : 'var(--mu)') + '">' + teamName(p.team) + '</button>' : '<span style="font-size:12px;font-weight:700;letter-spacing:.08em;color:' + (p.team === 'hunter' ? 'var(--red)' : p.team === 'fugitive' ? 'var(--blue)' : 'var(--mu)') + '">' + teamName(p.team) + '</span>') +
+    (p.consent ? '<span class="grn" role="img" aria-label="Accord donné" style="font-weight:700">✓</span>' : '<span class="tag">EN ATTENTE</span>') + (me.is_org && p.id !== me.id ? '<button class="lnk" data-a="kick" data-id="' + p.id + '" aria-label="Retirer ' + esc(p.pseudo) + '" style="text-decoration:none;min-width:36px">✕</button>' : '') + '</div>').join('');
+  put(el, '<div class="row"><button class="ib" data-a="leave" aria-label="Quitter le salon">‹</button><h1 class="hd grow" style="font-size:20px">' + esc(g.name) + '</h1><span class="lbl">Salon</span></div>' +
+    '<div class="card col" style="gap:10px"><div class="row sp"><div><div class="lbl">Code de la partie</div><div class="hd" style="font-size:36px;letter-spacing:.14em;line-height:1.1">' + esc(g.code) + '</div></div><button class="btn sm" data-a="invite">Inviter</button></div><span class="tx2" style="font-size:13px">' + g.duration_min + ' min · ' + g.n_hunters + ' chasseur' + (g.n_hunters > 1 ? 's' : '') + ' · ' + g.head_start_min + ' min d\'avance · ' + vis + '</span>' + (r.custom ? '<span class="tx2" style="font-size:13px;white-space:pre-wrap">' + esc(r.custom) + '</span>' : '') + '</div>' +
+    '<div class="row sp"><span class="lbl">Joueurs ' + st.players.length + ' / ' + g.max_players + '</span>' + (me.is_org ? '<button class="lnk" data-a="shuffle">Mélanger les équipes</button>' : '') + '</div>' +
+    '<div class="card" style="padding:0 14px">' + list + '</div>' +
+    (me.consent ? '<div class="row card" style="border-color:#23513B;background:#0C1A14"><span class="grow" style="font-size:14px">Tu as accepté de partager ta position pendant cette partie.</span><button class="lnk" data-a="unconsent">Retirer</button></div>' : '<button class="btn b" data-a="consent">Donner mon accord de position</button>') +
+    '<div style="margin-top:auto" class="col">' + (me.is_org ? (miss.length ? '<p class="amb" style="text-align:center;font-size:14px">Il manque l\'accord de : ' + esc(miss.map(p => p.pseudo).join(', ')) + '</p>' : st.players.length < 2 ? '<p class="amb" style="text-align:center;font-size:14px">Il faut au moins 2 joueurs.</p>' : '') + '<button class="btn w" data-a="start"' + (miss.length || st.players.length < 2 ? ' disabled' : '') + '>Démarrer la partie</button>' : '<p class="mu" style="text-align:center;font-size:14px">L\'organisateur lancera la partie quand tout le monde aura donné son accord.</p>') + '</div>');
+  if (!me.consent && S.consentAsked !== g.id) { S.consentAsked = g.id; showConsent(); } }
+function showConsent(){ const g = S.st.game, r = g.rules; const li = (a, b) => '<div class="row" style="align-items:flex-start;text-align:left"><b class="blue" style="margin-top:1px">✓</b><div><div style="font-weight:600">' + a + '</div><div class="mu" style="font-size:13px;line-height:1.4">' + b + '</div></div></div>';
+  msgBox('<div class="col" style="text-align:left;align-self:stretch;gap:10px"><span class="lbl">Avant de jouer</span><h1 class="hd" style="font-size:28px;line-height:1.12">Partager ta position pendant la partie</h1><p class="tx2" style="line-height:1.45">Sans ta position, la partie ne peut pas fonctionner. Voici exactement ce qui est partagé.</p></div>' +
+    '<div class="card col" style="gap:14px;align-self:stretch">' + li('Seulement pendant « ' + esc(g.name) + ' »', 'Rien avant le départ, rien après la fin.') + li(r.hunter_vision === 'ping' ? 'Les chasseurs repèrent les fuyards par intervalles' : r.hunter_vision === 'live' ? 'Les chasseurs voient les fuyards en direct' : 'Les chasseurs ne voient les fuyards que par pouvoirs', 'Les coéquipiers chasseurs se voient entre eux en direct.') + li('Arrêt immédiat si tu quittes ou si tu es éliminé', 'Le bouton Urgence coupe le partage tout de suite.') + li('Jamais en cachette', 'Un indicateur reste affiché tant que ta position est partagée. Garde l\'écran allumé : l\'appli ne te suit pas en arrière-plan.') + '</div>' +
+    '<div class="col" style="margin-top:auto;align-self:stretch"><button class="btn b" id="cs-y">J\'accepte et je rejoins</button><button class="btn" id="cs-n">Refuser et quitter</button></div>');
+  $('#cs-y').onclick = async () => { msgClose(); await act('set_consent', { p_game:S.gameId, p_ok:true }); };
+  $('#cs-n').onclick = async () => { msgClose(); const id = S.gameId; try { await rpc('leave_game', { p_game:id }); } catch (e) {} S.consentAsked = null; leaveLocal(); }; }
+$('#lobby-body').addEventListener('click', async e => { const b = e.target.closest('[data-a]'); if (!b || !S.gameId) return; const a = b.dataset.a, g = S.gameId;
+  if (a === 'leave') confirmBox(S.st.me.is_org ? 'Annuler la partie ?' : 'Quitter le salon ?', S.st.me.is_org ? 'Tu es l\'organisateur : la partie sera annulée pour tout le monde.' : 'Tu pourras revenir avec le code tant que la partie n\'a pas commencé.', 'Quitter', async () => { try { await rpc('leave_game', { p_game:g }); } catch (err) {} S.consentAsked = null; leaveLocal(); }, true);
+  else if (a === 'invite') { const url = location.origin + location.pathname + '?code=' + S.st.game.code, txt = 'Rejoins ma partie HUNT « ' + S.st.game.name + ' » avec le code ' + S.st.game.code; try { if (navigator.share) await navigator.share({ title:'HUNT', text:txt, url:url }); else { await navigator.clipboard.writeText(txt + ' : ' + url); toast('Lien copié', 'ok'); } } catch (err) {} }
+  else if (a === 'consent') showConsent();
+  else if (a === 'unconsent') act('set_consent', { p_game:g, p_ok:false });
+  else if (a === 'shuffle') act('shuffle_teams', { p_game:g });
+  else if (a === 'team') { const t = b.dataset.t, n = t === '' ? 'hunter' : t === 'hunter' ? 'fugitive' : null; act('set_team', { p_game:g, p_user:b.dataset.id, p_team:n }); }
+  else if (a === 'kick') act('kick_player', { p_game:g, p_user:b.dataset.id });
+  else if (a === 'start') { audio(); act('start_game', { p_game:g }); } });
+
+/* ---------- écran de jeu ---------- */
+function initGameMap(){ if (!S.gmap) { S.gmap = mkMap('gmap'); S.glay = L.layerGroup().addTo(S.gmap); S.gdyn = L.layerGroup().addTo(S.gmap); S.gtr = L.layerGroup().addTo(S.gmap);
+    S.gmap.on('click', ev => { if (!S.szPick) return; S.szPick = false; act('set_search_zone', { p_game:S.gameId, p:{ lat:ev.latlng.lat, lng:ev.latlng.lng, r:S.szR || 200 } }, 'Zone de recherche déclenchée'); }); }
+  setTimeout(() => { S.gmap.invalidateSize(); const z = S.st && S.st.game.zone; if (z) { S.gmap.fitBounds(L.latLng(z.lat, z.lng).toBounds(z.r * 2.2)); S.centered = true; } }, 80); }
+$('#g-tiles').onclick = () => nextTiles(S.gmap);
+$('#g-center').onclick = () => { if (S.pos) S.gmap.setView([S.pos.lat, S.pos.lng], Math.max(S.gmap.getZoom(), 17)); else { const z = S.st.game.zone; if (z) S.gmap.fitBounds(L.latLng(z.lat, z.lng).toBounds(z.r * 2.2)); else toast('Position pas encore connue'); } };
+function icon(p){ const k = p.pos.kind, me = p.id === S.user.id; const cls = 'mk ' + (p.team === 'hunter' ? 'mk-h' : 'mk-f') + (me ? ' mk-me' : '') + (k === 'ping' ? ' mk-ping' : '') + (k === 'beacon' ? ' mk-beacon' : '');
+  const lab = me ? '' : '<span class="mk-l">' + esc(p.pseudo) + (k === 'ping' ? ' · ' + ago(p.pos.age).replace('il y a ', '') : k === 'beacon' ? ' · hors zone' : '') + '</span>';
+  return L.divIcon({ className:'', html:'<div class="' + cls + '"><b></b></div>' + lab, iconSize:[30, 30], iconAnchor:[15, 15] }); }
+function drawMe(){ if (!S.gmap || !S.st || !S.pos) return; const me = S.st.players.find(p => p.id === S.user.id); if (!me || me.status !== 'active') return; const ll = [S.pos.lat, S.pos.lng];
+  const p = { id:me.id, team:me.team, pseudo:me.pseudo, pos:{ kind:'me' } };
+  if (!S.mk.me) { S.mk.me = L.marker(ll, { icon:icon(p), zIndexOffset:1000, interactive:false }).addTo(S.gmap); S.acc = L.circle(ll, { radius:S.pos.acc || 10, color:me.team === 'hunter' ? '#FF4D57' : '#3BA4FF', weight:1, fillOpacity:.08, interactive:false }).addTo(S.gmap); }
+  else { S.mk.me.setLatLng(ll); if (S.acc) { S.acc.setLatLng(ll); S.acc.setRadius(S.pos.acc || 10); } }
+  if (!S.centered) { S.gmap.setView(ll, 17); S.centered = true; }
+  const g = $('#g-gps'); if (g) g.textContent = S.pos.acc != null ? 'GPS ±' + Math.round(S.pos.acc) + ' m' : 'GPS actif'; }
+function renderGame(){ const st = S.st; if (!st || !S.gmap) return; const g = st.game, me = st.me, fx = st.fx || {}, r = g.rules, hunter = me.team === 'hunter', active = me.status === 'active';
+  $('#g-bot').classList.toggle('fug', !hunter);
+  $('#g-team').innerHTML = '<span class="row" style="justify-content:flex-end;color:' + (hunter ? 'var(--red)' : 'var(--blue)') + '">' + teamDot(me.team) + (active ? teamName(me.team) : me.status === 'eliminated' ? 'ÉLIMINÉ' : 'SPECTATEUR') + '</span>';
+  if (!S.pos) $('#g-gps').textContent = active ? (S.gpsErr || 'Recherche GPS…') : '';
+  $('#g-urg').style.display = active ? 'flex' : 'none';
+  // couches fixes
+  const key = JSON.stringify([g.zone, g.areas, g.search_zone, fx.sectors]);
+  if (key !== S.layKey) { S.layKey = key; drawStatic(S.gmap, S.glay, g.zone, g.areas, g.search_zone); (fx.sectors || []).forEach(s => L.circle([s.lat, s.lng], { radius:s.r, color:'#FF4D57', weight:2, fillColor:'#FF4D57', fillOpacity:.14, dashArray:'6 6', interactive:false }).addTo(S.glay)); }
+  // joueurs visibles
+  const seen = {}; st.players.forEach(p => { if (!p.pos || p.id === me.id) return; seen[p.id] = 1; const ll = [p.pos.lat, p.pos.lng]; if (S.mk[p.id]) { S.mk[p.id].setLatLng(ll); S.mk[p.id].setIcon(icon(p)); } else S.mk[p.id] = L.marker(ll, { icon:icon(p), interactive:false }).addTo(S.gmap); });
+  Object.keys(S.mk).forEach(k => { if (k !== 'me' && !seen[k]) { S.gmap.removeLayer(S.mk[k]); delete S.mk[k]; } });
+  if (!active && S.mk.me) { S.gmap.removeLayer(S.mk.me); delete S.mk.me; if (S.acc) { S.gmap.removeLayer(S.acc); S.acc = null; } }
+  drawMe();
+  if (r.trails && active && g.status === 'running' && Date.now() - S.trailAt > 15000) { S.trailAt = Date.now(); rpc('get_trails', { p_game:g.id }).then(t => { S.gtr.clearLayers(); Object.keys(t || {}).forEach(id => { const pl = st.players.find(p => p.id === id); L.polyline(t[id], { color:pl && pl.team === 'hunter' ? '#FF4D57' : '#3BA4FF', weight:2, opacity:.45, interactive:false }).addTo(S.gtr); }); }).catch(() => {}); }
+  // pastilles
+  const nf = st.players.filter(p => p.team === 'fugitive'), nfa = nf.filter(p => p.status === 'active').length, nh = st.players.filter(p => p.team === 'hunter' && p.status === 'active').length;
+  $('#g-chips').innerHTML = '<span class="chip"><i class="ci"></i>' + nfa + ' fuyard' + (nfa > 1 ? 's' : '') + ' sur ' + nf.length + '</span><span class="chip"><i class="dm"></i>' + nh + ' chasseur' + (nh > 1 ? 's' : '') + '</span>' +
+    '<span class="chip" style="border-color:' + (S.track ? '#23513B' : 'var(--bd)') + '"><i class="ci" style="background:' + (S.track ? 'var(--grn)' : 'var(--mu)') + '"></i>' + (S.track ? 'Position partagée' : 'Position non partagée') + '</span>';
+  renderLive(); renderBottom(); }
+function renderLive(){ const st = S.st; if (!st || !$('#s-game').classList.contains('on')) return; const g = st.game, me = st.me, fx = st.fx || {}, hunter = me.team === 'hunter', run = g.status === 'running', el = run ? elapsed() : 0;
+  const clock = Math.min(g.total, g.clock + el), hsLeft = g.hs - clock;
+  if (hsLeft > 0) { $('#g-tl').textContent = 'Avance des fuyards'; $('#g-t').textContent = fmt(hsLeft); } else { $('#g-tl').textContent = 'Temps restant'; $('#g-t').textContent = fmt(g.total - clock); }
+  const b = [];
+  if (!S.net) b.push('<div class="ban a">Hors réseau : reconnexion en cours. Ta dernière position est gardée.</div>');
+  if (S.track && (S.gpsErr || (S.pos && Date.now() - S.pos.t > 20000))) b.push('<div class="ban a">' + esc(S.gpsErr || 'Signal GPS perdu') + '</div>');
+  if (g.status === 'paused') b.push('<div class="ban a">Partie en pause : positions et chrono arrêtés.</div>');
+  if (me.status === 'active') {
+    if (hsLeft > 0) b.push('<div class="ban b">' + (hunter ? 'Les fuyards prennent de l\'avance. Départ dans ' + fmt(hsLeft) + '.' : 'Tu as de l\'avance : les chasseurs partent dans ' + fmt(hsLeft) + '.') + '</div>');
+    if (fx.out_zone) b.push('<div class="ban r">Hors zone ou zone interdite' + (hunter ? '.' : ' : ta position est visible des chasseurs.') + '</div>');
+    if (fx.frozen_s != null && left(fx.frozen_s) > 0) b.push('<div class="ban r">Brouillage : fuyards invisibles encore ' + Math.ceil(left(fx.frozen_s)) + ' s.</div>');
+    if ('proximity_m' in fx) b.push('<div class="ban r">' + (fx.proximity_m == null ? 'Proximité : aucun signal de fuyard.' : 'Fuyard le plus proche : environ ' + fx.proximity_m + ' m.') + '</div>');
+    if ('detect' in fx) b.push('<div class="ban b">' + (fx.detect ? 'Chasseur le plus proche : environ ' + fx.detect.m + ' m, direction ' + DIRS[fx.detect.dir] + '.' : 'Détection : aucun chasseur localisé.') + '</div>');
+    if (fx.next_ping_s != null) { const n = left(fx.next_ping_s); b.push('<div class="ban b">' + (n > 0 ? 'Tu seras repéré dans ' + fmt(n) + '.' : 'Repérage en cours…') + '</div>'); }
+    if (g.search_zone) b.push('<div class="ban a">Zone de recherche active (cercle orange).</div>');
+  }
+  $('#g-bans').innerHTML = b.join('');
+  $$('#g-pws [data-k]').forEach(btn => { const k = btn.dataset.k, p = st.powers[k]; if (!p) return; const sm = $('small', btn), a = left(p.active_s), s = left(p.starts_s), c = left(p.cd_s);
+    btn.className = 'pw' + (a > 0 || s > 0 ? ' act' : (c > 0 || p.uses_left < 1) ? ' off' : ''); sm.textContent = s > 0 ? 'dans ' + Math.ceil(s) + ' s' : a > 0 ? fmt(a) : p.uses_left < 1 ? 'épuisé' : c > 0 ? 'dans ' + fmt(c) : 'prêt · ' + p.uses_left; });
+  const mb = $('#g-mb'), bot = $('#g-bot'); if (mb && bot) mb.style.bottom = (bot.offsetHeight + 12) + 'px'; }
+setInterval(renderLive, 1000);
+function renderBottom(){ const st = S.st, me = st.me, hunter = me.team === 'hunter', active = me.status === 'active', run = st.game.status === 'running';
+  const keys = Object.keys(st.powers || {}).filter(k => st.powers[k].on); const cur = $$('#g-pws [data-k]').map(b => b.dataset.k).join();
+  if (!active) { $('#g-pws').innerHTML = ''; } else if (cur !== keys.join()) $('#g-pws').innerHTML = keys.map(k => '<button class="pw" data-k="' + k + '"><span>' + POW[k][0] + '</span><small></small></button>').join('');
+  let a = ''; if (active && run) a += hunter ? '<button class="btn r" data-a="targets">Fuyards</button>' + '<button class="btn" data-a="scan">Scanner un QR</button>' : '<button class="btn b" data-a="touched">J\'ai été touché</button>';
+  a += '<button class="btn" data-a="players">Joueurs</button>'; if (me.is_org) a += '<button class="btn" data-a="org">Orga</button>'; if (!active) a += '<button class="btn" data-a="quit">Quitter</button>';
+  if ($('#g-acts').dataset.h !== a) { $('#g-acts').innerHTML = a; $('#g-acts').dataset.h = a; } }
+$('#g-pws').addEventListener('click', e => { const b = e.target.closest('[data-k]'); if (!b) return; const k = b.dataset.k; if (k === 'ring') return openSheet(sheetTargets); act('use_power', { p_game:S.gameId, p_power:k, p_target:null }, POW[k][0] + ' activé'); });
+$('#g-acts').addEventListener('click', e => { const b = e.target.closest('[data-a]'); if (!b) return; const a = b.dataset.a;
+  if (a === 'targets') openSheet(sheetTargets); else if (a === 'players') openSheet(sheetPlayers); else if (a === 'org') openSheet(sheetOrg); else if (a === 'scan') openScanner(); else if (a === 'touched') openTouched(); else if (a === 'quit') leaveLocal(); });
+$('#g-urg').onclick = () => confirmBox('Quitter la partie ?', 'Ta position cesse d\'être partagée immédiatement et l\'organisateur est prévenu. Tu ne pourras pas revenir dans cette partie.', 'Quitter maintenant', async () => { const id = S.gameId; stopGPS(); try { await rpc('leave_game', { p_game:id }); } catch (e) {} toast('Tu as quitté la partie. Position non partagée.', 'ok'); leaveLocal(); }, true);
+$('#ring-stop').onclick = () => { stopSiren(); vib(0); $('#ov-ring').classList.remove('on'); };
+
+function dist(p){ return S.pos && p.pos ? Math.round(hav(S.pos, p.pos) / 5) * 5 : null; }
+function sheetTargets(){ const st = S.st, ring = st.powers.ring, list = st.players.filter(p => p.team === 'fugitive' && p.status === 'active');
+  put($('#sheet-box'), sheetHead('Fuyards en jeu') + (list.length ? '<div class="card" style="padding:0 14px">' + list.map(p => { const d = dist(p); return '<div class="li" style="flex-wrap:wrap;padding:8px 0"><i class="ci"></i><div class="grow"><div style="font-weight:700">' + esc(p.pseudo) + '</div><div class="mu" style="font-size:13px">' + (p.pos ? (d != null ? d + ' m · ' : '') + (p.pos.kind === 'ping' ? 'repéré ' + ago(p.pos.age) : p.pos.kind === 'beacon' ? 'hors zone, en direct' : 'en direct') : 'position inconnue') + '</div></div>' +
+      (ring && ring.on ? '<button class="btn sm ro" data-a="ring" data-id="' + p.id + '">Sonner</button>' : '') + (st.game.rules.validation !== 'qr' ? '<button class="btn sm r" data-a="cap" data-id="' + p.id + '">Touché</button>' : '') + '</div>'; }).join('') + '</div>' : '<p class="mu">Aucun fuyard en jeu.</p>') +
+    (st.game.rules.validation === 'qr' ? '<p class="mu" style="font-size:13px">Dans cette partie, une capture se valide en scannant le QR code du fuyard.</p>' : '') +
+    (st.captures.filter(c => c.hunter_id === st.me.id).map(c => '<p class="amb" style="font-size:14px">' + (c.status === 'pending' ? 'En attente de la confirmation de ' + esc(c.fugitive) + '.' : esc(c.fugitive) + ' conteste : l\'organisateur tranche.') + '</p>').join(''))); }
+function sheetPlayers(){ const st = S.st, me = st.me; const row = p => '<div class="li">' + teamDot(p.team) + '<span class="grow" style="font-weight:600;' + (p.status !== 'active' ? 'color:var(--mu)' : '') + '">' + esc(p.pseudo) + (p.id === me.id ? ' (toi)' : '') + '</span><span class="mu" style="font-size:13px">' +
+    (p.status === 'eliminated' ? 'Éliminé' + (p.elim_by ? ' par ' + esc(p.elim_by) : '') + ' · ' + fmtDur(p.survival_s) : p.status === 'left' ? 'A quitté' : p.gps_age == null ? (p.team === me.team || me.is_org ? '<span class="amb">GPS indisponible</span>' : 'En jeu') : (p.gps_age > 30 ? '<span class="amb">' + ago(p.gps_age) + '</span>' : (p.gps_acc != null ? '±' + p.gps_acc + ' m · ' : '') + ago(p.gps_age))) + '</span></div>';
+  put($('#sheet-box'), sheetHead('Joueurs') + '<div class="card" style="padding:0 14px">' + st.players.map(row).join('') + '</div>' + (st.game.rules.custom ? '<span class="lbl">Règles de la partie</span><p class="tx2" style="white-space:pre-wrap;font-size:14px">' + esc(st.game.rules.custom) + '</p>' : '')); }
+function sheetOrg(){ const st = S.st, g = st.game, dis = st.captures.filter(c => c.status === 'disputed');
+  put($('#sheet-box'), sheetHead('Organisateur') + '<div class="row">' + (g.status === 'running' ? '<button class="btn grow" data-a="pause">Pause</button>' : '<button class="btn w grow" data-a="resume">Reprendre</button>') + '<button class="btn ro grow" data-a="end">Terminer</button></div>' +
+    dis.map(c => '<div class="card col" style="background:#1E1708;border-color:var(--amb)"><span class="lbl amb">Capture contestée</span><b>' + esc(c.hunter) + ' dit avoir touché ' + esc(c.fugitive) + '</b><div class="row"><button class="btn sm w grow" data-a="res" data-id="' + c.id + '" data-ok="1">Valider</button><button class="btn sm grow" data-a="res" data-id="' + c.id + '" data-ok="0">Rejeter</button></div></div>').join('') +
+    '<div class="card col"><b>Zone de recherche</b><span class="mu" style="font-size:13px">Désigne aux joueurs un secteur à fouiller. Choisis un rayon puis touche la carte.</span><div class="row">' + [100, 200, 400].map(r => '<button class="btn sm grow" data-a="sz" data-r="' + r + '">' + r + ' m</button>').join('') + (g.search_zone ? '<button class="btn sm ro grow" data-a="szoff">Retirer</button>' : '') + '</div></div>'); }
+$('#sheet-box').addEventListener('click', async e => { const b = e.target.closest('[data-a]'); if (!b) return; const a = b.dataset.a, g = S.gameId, id = b.dataset.id;
+  if (a === 'close') closeSheet();
+  else if (a === 'ring') { const r = await act('use_power', { p_game:g, p_power:'ring', p_target:id }, 'Sonnerie envoyée'); if (r) closeSheet(); }
+  else if (a === 'cap') { const p = S.st.players.find(x => x.id === id); confirmBox('Capture de ' + (p ? p.pseudo : 'ce fuyard'), S.st.game.rules.validation === 'hunter' ? 'Tu confirmes l\'avoir touché ? Il sera éliminé tout de suite.' : 'Tu confirmes l\'avoir touché ? Il devra confirmer de son côté.', 'Oui, je l\'ai touché', async () => { const r = await act('declare_capture', { p_game:g, p_fugitive:id }); if (r) toast(r.status === 'confirmed' ? 'Capture validée' : 'Demande envoyée au fuyard', 'ok'); }); }
+  else if (a === 'pause') act('pause_game', { p_game:g });
+  else if (a === 'resume') act('resume_game', { p_game:g });
+  else if (a === 'end') confirmBox('Terminer la partie ?', 'La partie s\'arrête pour tout le monde, sans vainqueur, et le partage de position est coupé.', 'Terminer', () => act('end_game', { p_game:g }), true);
+  else if (a === 'res') act('resolve_capture', { p_capture:+id, p_ok:b.dataset.ok === '1' }, 'Décision enregistrée');
+  else if (a === 'sz') { S.szR = +b.dataset.r; S.szPick = true; closeSheet(); toast('Touche la carte pour placer la zone de recherche'); }
+  else if (a === 'szoff') act('set_search_zone', { p_game:g, p:null }, 'Zone de recherche retirée');
+  else if (a === 'admit') { const p = S.st.players.find(x => x.id === id); confirmBox('Tu as été touché ?', 'Tu confirmes que ' + (p ? p.pseudo : 'ce chasseur') + ' t\'a touché. Tu seras éliminé.', 'Oui, je suis touché', async () => { await act('admit_capture', { p_game:g, p_hunter:id }); closeSheet(); }, true); }
+  else if (a === 'manual') { const v = ($('#scan-code').value || '').trim(); if (v.length < 6) return toast('Saisis le code affiché sous le QR', 'err'); submitCode(v); } });
+
+/* ---------- capture : QR côté fuyard, scan côté chasseur ---------- */
+function drawQR(text){ const c = $('#qrc'); if (!c || !window.qrcode) return false; try { const q = window.qrcode(0, 'M'); q.addData(text); q.make(); const n = q.getModuleCount(), m = 2, size = 480, cell = Math.floor(size / (n + 2 * m)), off = Math.floor((size - cell * n) / 2); c.width = c.height = size; const x = c.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, size, size); x.fillStyle = '#06080B';
+    for (let r = 0; r < n; r++) for (let k = 0; k < n; k++) if (q.isDark(r, k)) x.fillRect(off + k * cell, off + r * cell, cell, cell); return true; } catch (e) { return false; } }
+async function openTouched(){ let code = null, exp = 0, timer = null;
+  const refresh = async () => { try { const r = await rpc('capture_code', { p_game:S.gameId }); code = r.code; exp = Date.now() + r.exp_s * 1000; paint(); } catch (e) { toast(e.message, 'err'); } };
+  const paint = () => { const short = code ? code.split(':').pop() : ''; const ok = code && drawQR(code); const t = $('#qr-t'); if (t) t.textContent = code ? 'Code ' + short + ' · expire dans ' + fmt((exp - Date.now()) / 1000) : 'Préparation du code…'; const c = $('#qrc'); if (c) c.style.display = ok ? 'block' : 'none'; };
+  openSheet(() => { const st = S.st; if (!st || st.me.status !== 'active') return closeSheet(); if ($('#qr-t')) { const hs = $('#touch-h'); if (hs) hs.innerHTML = huntersHtml(); return; }
+    $('#sheet-box').innerHTML = sheetHead('J\'ai été touché') + '<div class="col" style="align-items:center"><canvas id="qrc" style="display:none"></canvas><b id="qr-t" class="hd" style="font-size:15px">Préparation du code…</b><span class="mu" style="font-size:13px;text-align:center">Fais scanner ce code par le chasseur, ou choisis-le dans la liste.</span></div><div id="touch-h">' + huntersHtml() + '</div>'; paint(); });
+  S.onSheetClose = () => clearInterval(timer); await refresh(); timer = setInterval(() => { if (!$('#qr-t')) return clearInterval(timer); if (Date.now() > exp - 5000) refresh(); else paint(); }, 1000); }
+function huntersHtml(){ const hs = S.st.players.filter(p => p.team === 'hunter' && p.status === 'active'); return S.st.game.rules.validation === 'qr' ? '' : '<div class="card" style="padding:0 14px">' + hs.map(p => '<div class="li"><i class="dm"></i><span class="grow" style="font-weight:600">' + esc(p.pseudo) + '</span><button class="btn sm ro" data-a="admit" data-id="' + p.id + '">Il m\'a touché</button></div>').join('') + '</div>'; }
+let camStream = null, camRaf = null;
+function stopCam(){ if (camRaf) cancelAnimationFrame(camRaf); camRaf = null; if (camStream) camStream.getTracks().forEach(t => t.stop()); camStream = null; }
+async function openScanner(){ openSheet(() => { if ($('#cam')) return; $('#sheet-box').innerHTML = sheetHead('Scanner le QR du fuyard') + '<video id="cam" playsinline muted></video><p id="cam-msg" class="mu" style="font-size:13px">Vise le QR code affiché sur le téléphone du fuyard.</p><div class="row"><input class="in grow" id="scan-code" maxlength="12" autocapitalize="characters" autocomplete="off" placeholder="ou saisis le code"><button class="btn sm" data-a="manual">Valider</button></div>'; });
+  S.onSheetClose = stopCam;
+  try { camStream = await navigator.mediaDevices.getUserMedia({ video:{ facingMode:{ ideal:'environment' } }, audio:false }); const v = $('#cam'); if (!v) return stopCam(); v.srcObject = camStream; await v.play();
+    const cv = document.createElement('canvas'), cx = cv.getContext('2d', { willReadFrequently:true }); let busy = false;
+    const loop = () => { if (!camStream) return; if (v.videoWidth && window.jsQR && !busy) { const w = 360, h = Math.round(360 * v.videoHeight / v.videoWidth); cv.width = w; cv.height = h; cx.drawImage(v, 0, 0, w, h); const d = cx.getImageData(0, 0, w, h), q = window.jsQR(d.data, w, h); if (q && q.data && q.data.indexOf('HUNT:') === 0) { busy = true; submitCode(q.data).then(ok => { busy = false; }); } } camRaf = requestAnimationFrame(loop); }; loop();
+    if (!window.jsQR) $('#cam-msg').textContent = 'Lecture automatique indisponible : saisis le code affiché sous le QR.';
+  } catch (e) { const m = $('#cam-msg'); if (m) { m.className = 'amb'; m.textContent = 'Caméra indisponible : saisis le code affiché sous le QR.'; } } }
+async function submitCode(code){ const r = await act('capture_by_code', { p_game:S.gameId, p_code:code }); if (r) { toast((r.fugitive || 'Fuyard') + ' capturé !', 'ok'); beep(880, 0.15, 3); closeSheet(); return true; } await new Promise(ok => setTimeout(ok, 1500)); return false; }
+
+/* ---------- demandes de capture et élimination ---------- */
+function checkOverlays(){ const st = S.st, me = st.me; const req = st.captures.find(c => c.fugitive_id === me.id && c.status === 'pending');
+  if (req && S.capShown !== req.id) { S.capShown = req.id; closeSheet();
+    msgBox('<div class="col" style="margin-top:12vh"><span class="row lbl red" style="justify-content:center"><i class="dm"></i>Capture</span><h1 class="hd" style="font-size:32px;line-height:1.1">' + esc(req.hunter) + ' déclare t\'avoir touché</h1><p class="tx2" style="font-size:16px">Confirme si c\'est vrai. Sinon, l\'organisateur tranchera.</p></div><div class="col" style="margin-top:auto;align-self:stretch"><button class="btn r" id="cq-y">Oui, je suis touché</button><button class="btn" id="cq-n">Je conteste</button></div>');
+    $('#cq-y').onclick = () => { msgClose(); act('answer_capture', { p_capture:req.id, p_ok:true }); }; $('#cq-n').onclick = () => { msgClose(); act('answer_capture', { p_capture:req.id, p_ok:false }, 'Contestation envoyée à l\'organisateur'); };
+  } else if (!req && S.capShown) { S.capShown = null; if ($('#cq-y')) msgClose(); }
+  if (me.status === 'eliminated' && !S.elimShown) { S.elimShown = true; closeSheet(); const nf = st.players.filter(p => p.team === 'fugitive').length; const t = me.elim_at ? new Date(me.elim_at).toLocaleTimeString('fr-FR', { hour:'2-digit', minute:'2-digit' }) : '';
+    const li = (a, b, c) => '<div class="li sp"><span class="mu" style="font-size:14px">' + a + '</span><b class="hd ' + (c || '') + '" style="font-size:17px">' + b + '</b></div>';
+    msgBox('<div class="col" style="text-align:left;align-self:stretch"><span class="lbl">' + esc(st.game.name) + '</span><h1 class="hd red" style="font-size:60px;line-height:.95;letter-spacing:.04em">ÉLIMINÉ</h1></div><div class="card" style="align-self:stretch;padding:0 16px;text-align:left">' + li('Attrapé par', esc(me.elim_by || '—')) + li('Heure', t) + li('Durée de survie', fmtDur(me.survival_s), 'blue') + li('Classement', (me.rank || '—') + 'e sur ' + nf + ' fuyards') + '</div><div class="card row" style="align-self:stretch;border-color:#23513B;background:#0C1A14;text-align:left"><b class="grn">✓</b><span style="font-size:14px">Ta position n\'est plus partagée. Le GPS de HUNT est arrêté.</span></div><div class="col" style="margin-top:auto;align-self:stretch"><button class="btn w" id="el-s">Suivre la fin de partie</button><button class="btn" id="el-q">Quitter</button></div>');
+    $('#el-s').onclick = msgClose; $('#el-q').onclick = () => { msgClose(); leaveLocal(); }; } }
+
+/* ---------- résultats ---------- */
+function renderResults(){ const st = S.st, g = st.game, me = st.me, w = g.winner; const fug = st.players.filter(p => p.team === 'fugitive').sort((a, b) => (a.rank || 99) - (b.rank || 99) || (b.survival_s || 0) - (a.survival_s || 0)), hun = st.players.filter(p => p.team === 'hunter').sort((a, b) => b.catches - a.catches);
+  const title = w === 'hunter' ? 'VICTOIRE DES <span class="red">CHASSEURS</span>' : w === 'fugitive' ? 'VICTOIRE DES <span class="blue">FUYARDS</span>' : 'PARTIE ARRÊTÉE';
+  const surv = fug.filter(p => p.status === 'active').length;
+  $('#res-body').innerHTML = '<div class="col" style="margin-top:20px"><span class="lbl">' + esc(g.name) + ' · partie terminée</span><h1 class="hd" style="font-size:42px;line-height:1">' + title + '</h1><p class="tx2">' + (w === 'none' ? 'L\'organisateur a mis fin à la partie.' : surv + ' fuyard' + (surv > 1 ? 's' : '') + ' sur ' + fug.length + ' ' + (surv > 1 ? 'ont' : 'a') + ' tenu jusqu\'au bout.') + '</p></div>' +
+    (me.team ? '<div class="card row sp" style="border-color:' + (me.team === 'hunter' ? 'var(--red)' : 'var(--blue)') + '"><div><b>' + (me.team === 'hunter' ? 'Chasseur · ' + me.catches + ' capture' + (me.catches > 1 ? 's' : '') : 'Fuyard · ' + (me.status === 'active' ? 'jamais attrapé' : 'survie ' + fmtDur(me.survival_s))) + '</b><div class="tx2" style="font-size:13px">' + (w === me.team && me.status !== 'left' ? 'Ton équipe a gagné' : w === 'none' ? '' : 'Ton équipe a perdu') + '</div></div></div>' : '') +
+    '<span class="lbl">Fuyards · durée de survie</span><div class="card" style="padding:0 14px">' + (fug.map((p, i) => '<div class="li"' + (p.id === me.id ? ' style="background:#13202E;margin:0 -14px;padding:0 14px"' : '') + '><b class="hd" style="width:22px;color:' + (i === 0 ? 'var(--amb)' : 'var(--tx2)') + '">' + (i + 1) + '</b><span class="grow" style="font-weight:600">' + esc(p.pseudo) + '</span><span style="font-size:13px" class="' + (p.status === 'active' ? 'grn' : 'tx2') + '">' + (p.status === 'active' ? 'Jamais attrapé' : p.status === 'left' ? 'A quitté · ' + fmtDur(p.survival_s) : fmtDur(p.survival_s) + (p.elim_by ? ' · par ' + esc(p.elim_by) : '')) + '</span></div>').join('') || '<div class="li mu">Aucun fuyard.</div>') + '</div>' +
+    '<span class="lbl">Chasseurs · captures</span><div class="card" style="padding:0 14px">' + (hun.map(p => '<div class="li"' + (p.id === me.id ? ' style="background:#2A1114;margin:0 -14px;padding:0 14px"' : '') + '><i class="dm"></i><span class="grow" style="font-weight:600">' + esc(p.pseudo) + '</span><b class="hd red">' + p.catches + '</b></div>').join('') || '<div class="li mu">Aucun chasseur.</div>') + '</div>' +
+    '<div class="card row" style="border-color:#23513B;background:#0C1A14"><b class="grn">✓</b><span style="font-size:14px">Le partage de position est arrêté pour tous les joueurs.</span></div><button class="btn w" id="res-home" style="margin-top:auto">Retour à l\'accueil</button>';
+  $('#res-home').onclick = () => { S.consentAsked = null; leaveLocal(); }; }
+
+/* ---------- démarrage ---------- */
+(function init(){ if (!sb || !window.L) { document.body.innerHTML = '<div style="padding:40px 24px;font-family:system-ui;color:#F2F5F8"><h1>HUNT</h1><p>Impossible de charger l\'application. Vérifie ta connexion Internet puis recharge la page.</p></div>'; return; }
+  const code = new URLSearchParams(location.search).get('code'); if (code) S.joinCode = code.toUpperCase().slice(0, 6);
+  show('s-auth');
+  sb.auth.onAuthStateChange((ev, session) => { const u = session && session.user; if (u && (!S.user || S.user.id !== u.id)) { S.user = u; setTimeout(loadHome, 0); } else if (!u && (S.user || ev === 'INITIAL_SESSION' || ev === 'SIGNED_OUT')) { if (S.gameId) leaveLocal(true); S.user = null; S.profile = null; show('s-auth'); } }); })();
+</script>
+</body>
+</html>
